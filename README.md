@@ -1,169 +1,315 @@
-# AWMAS Full-Stack Architecture Showcase
+# AWMAS — Full-Stack Architecture Case Study
 
-This folder is a public-facing showcase plan and case study for a production-oriented monorepo that combines three Laravel backends with one Flutter mobile application.
+A public-facing technical showcase for a real production monorepo: **three Laravel backends** and **one Flutter mobile application**, wired together for a multi-tenant waste-management and environmental-services platform.
 
-The goal is simple: give employers a clear, credible view of how I design, structure, and operate full-stack systems without exposing sensitive source code, credentials, or client-specific business data.
+This repository is the **public, sanitized companion** to the production system. The source code for the four live applications is in private repositories. What is published here is a credible, code-level walkthrough of how the system is designed, how the pieces communicate, and how it is operated in real production conditions.
 
-## Showcase Purpose
+> Open the [live website](https://github.com/your-username/awmas-architecture-showcase) for the rendered version, or read the [architecture pages](#table-of-contents) directly in this repository.
 
-This showcase is designed to demonstrate:
+---
 
-- system design for multi-application products
-- Laravel architecture across multiple backends
-- Flutter mobile architecture for real-world service delivery
-- multi-tenant and multi-database thinking
-- API design, mobile networking, and binary document delivery
-- role-based access control and operational dashboards
-- developer experience improvements for monorepo workflows
+## Production credentials at a glance
 
-## System Summary
+| Metric | Value |
+| --- | --- |
+| Companies running AWMAS in production | **11** |
+| Flutter client downloads (App Store + Google Play) | **4,000+** |
+| Minimum monthly transaction volume through the Flutter app | **₦25,000,000+** |
+| Tenant databases under one codebase | **9+** |
+| Coordinated applications in one workspace | **4** (3 Laravel + 1 Flutter) |
+| Recurring GitHub Actions deployment pipeline | **Yes** (Laravel production deploy to VPS) |
 
-The source system is organized as four sub-projects under one parent workspace:
+AWMAS is not a prototype. It is the day-to-day operational backbone for waste-management and environmental-services companies across multiple Nigerian states — issuing real bills, processing real payments, and serving real customer accounts every day.
 
-| Sub-project | Role in the system | Primary audience |
-| --- | --- | --- |
-| `admin-backend` | Operational backend for internal teams | Admin and operations staff |
-| `board-backend` | Oversight and analytics backend | Executives and stakeholders |
-| `client-backend` | Mobile/API backend for citizen or customer interactions | End users through the app |
-| `client-frontend` | Flutter mobile application | Clients and residents |
+---
 
-## Architecture At A Glance
+## Live mobile app
+
+The Flutter client is published on both major stores. Employers can install it, log in with a demo tenant, and see the production UI in their own hands.
+
+- **App Store** — [https://apps.apple.com/us/app/psp-hub-track-waste-bills/id6757864312](https://apps.apple.com/us/app/psp-hub-track-waste-bills/id6757864312)
+- **Google Play** — [https://play.google.com/store/apps/details?id=com.ashraafitworld.psphub](https://play.google.com/store/apps/details?id=com.ashraafitworld.psphub)
+
+---
+
+## Table of contents
+
+- [System architecture](#system-architecture)
+- [Why this architecture](#why-this-architecture)
+- [Documentation pages](#documentation-pages)
+- [The four applications](#the-four-applications)
+- [Representative engineering patterns](#representative-engineering-patterns)
+- [Production-credentials details](#production-credentials-details)
+- [Repository structure](#repository-structure)
+- [Local development and serving the showcase](#local-development-and-serving-the-showcase)
+- [Sanitization policy](#sanitization-policy)
+- [About this showcase](#about-this-showcase)
+
+---
+
+## System architecture
+
+AWMAS is organized as a **multi-application monorepo**. Each application has a distinct audience, a distinct data boundary, and a distinct set of workflows. They are not microservices that share a database — they are three independent Laravel applications that share a configuration-driven model for tenant routing.
 
 ```mermaid
 flowchart LR
-    A[Flutter Client App] --> B[Client Backend API]
-    O[Operations Staff] --> C[Admin Backend]
-    E[Executives and Stakeholders] --> D[Board Backend]
+    A[Flutter Mobile App<br/>iOS + Android] --> B[client-backend<br/>Mobile API]
+    O[Operations Staff] --> C[admin-backend<br/>Internal Portal]
+    E[Executives] --> D[board-backend<br/>Oversight Portal]
 
-    B --> T[(Tenant Databases)]
-    C --> T
-    D --> G[(Board / Aggregate Database)]
-    D --> T
+    B --> T1[(Tenant A DB)]
+    B --> T2[(Tenant B DB)]
+    C --> T1
+    C --> T2
+    C --> T3[(Tenant C DB)]
+    D --> G[(Aggregate Reporting DB)]
 
-    B --> P[Payment and Notification Integrations]
+    B --> P[Firebase FCM]
+    B --> P2[Payment Gateway]
     C --> P
-    D --> P
+    C --> P2
+    D --> P2
 ```
 
-## Why This Architecture Matters
+### High-level request flow
 
-### 1. Clear separation of responsibilities
-Instead of pushing every workflow into a single monolith, the system separates concerns into distinct applications:
+| Request | Path | Data boundary |
+| --- | --- | --- |
+| Customer mobile app | Flutter app → `client-backend` | One of 9+ tenant DBs (resolved by request header) |
+| Operations staff (CRUD, billing, payments) | Browser → `admin-backend` | Active LGA / tenant (resolved from session) |
+| Executive / stakeholder reporting | Browser → `board-backend` | Aggregate reporting DB + cross-tenant rollups |
 
-- the admin backend handles operational workflows and staff actions
-- the board backend focuses on oversight, reporting, and executive visibility
-- the client backend provides a mobile-safe API surface
-- the Flutter app focuses on user-facing flows such as sign-in, billing, statements, and payments
+---
 
-This separation improves clarity, reduces accidental coupling, and makes permission boundaries easier to reason about.
+## Why this architecture
 
-### 2. Tenant-aware database strategy
-The client-facing backend is structured around multiple business or local-government deployments. Each deployment can point to its own database credentials through configuration and environment variables, allowing one application codebase to support multiple tenant datasets.
+**1. Clear separation of responsibilities**
 
-### 3. Role-specific internal portals
-The system distinguishes between operational staff and oversight users. The admin portal includes middleware-driven route protection for different internal roles, while the board portal exposes a different reporting-oriented experience for executives and stakeholders.
+Operational, oversight, and mobile workflows do not share routes, controllers, or databases. The admin portal cannot accidentally expose a customer-facing endpoint. The mobile API cannot accidentally serve an internal staff view. Permission boundaries are structural, not enforced by middleware alone.
 
-### 4. Mobile-first API design
-The Flutter app is not a toy frontend. It handles:
+**2. Multi-tenant database routing at the connection level**
 
-- connection discovery
-- API authentication headers
-- file uploads
-- account statement PDF generation
-- fallback handling for JSON and binary responses
-- Firebase initialization and push notification token setup
+Each of the 11 production deployments points to its own database. Tenants are isolated at the **database connection level**, not at the query level. There is no shared `tenant_id` column that a developer could forget to filter by. The leakage risk is structural: a developer physically cannot query another tenant's data by accident.
 
-### 5. Practical developer experience
-The monorepo includes quality-of-life tooling for local development, such as a single script to boot multiple Laravel servers and editor configurations for opening the entire workspace while still debugging the nested Flutter application correctly.
+**3. Service-layer domain logic**
 
-## Notable Engineering Decisions
+Complex business rules — billing, payments, broadcasting, multi-channel notifications — live in dedicated service classes rather than being scattered across controllers. Controllers are thin. Domain logic is reusable. Rules are testable.
 
-### Multi-backend Laravel organization
-A major strength of this system is that Laravel is used in three different ways inside the same workspace:
+**4. Mobile-first defensive integration**
 
-- `admin-backend` behaves like an operations system with rich route groups, permissions, staff workflows, and session-aware context switching
-- `board-backend` behaves like a reporting and governance system with role-specific dashboards and deployment analytics
-- `client-backend` behaves like a mobile API optimized for authenticated requests, billing workflows, and document delivery
+The Flutter client is not a thin wrapper. It handles tenant selection, multipart uploads, streamed binary PDF retrieval, JSON base64 fallback, push token acquisition with progressive backoff for iOS APNs, and WebView-based payment flows with deep-link reconciliation. The patterns shown in the [frontend page](frontend.html) are real, taken from the production codebase.
 
-### Config-driven tenant catalog
-The tenant configuration model is strong portfolio material because it shows architectural thinking rather than just controller CRUD. Tenant metadata, credentials, and connection names are centralized in configuration and surfaced to the app through services and environment values.
+**5. Operational tooling that respects a monorepo**
 
-### Service-layer domain logic
-The codebase includes meaningful service classes for account and billing workflows rather than pushing everything into controllers. That is the kind of maintainability signal many hiring managers look for.
+Three Laravel services and a Flutter app in one workspace is convenient for coordination but introduces local-development friction. A single root-level bash script boots all three backends with distinct ports, binds the mobile API to the local network for physical-device testing, and traps Ctrl+C for clean shutdown. Editor settings explicitly point the Dart analyzer to the nested Flutter project. GitHub Actions deploys to the production VPS on every push to `main`.
 
-### Mobile document delivery
-The client app includes logic for downloading account statements even when the backend may return either JSON metadata or raw PDF content. That kind of defensive integration work is typical of production systems and worth highlighting.
+---
 
-## What Employers Should Review First
+## Documentation pages
 
-If you only have a few minutes, start here:
+This repository is rendered as a four-page public website. Each page covers one major concern of the system.
 
-1. [backend-architecture/README.md](backend-architecture/README.md)
-2. [backend-architecture/dynamic-database-routing.md](backend-architecture/dynamic-database-routing.md)
-3. [backend-architecture/tenant-routing-code-sample.md](backend-architecture/tenant-routing-code-sample.md)
-4. [backend-architecture/service-layer-patterns.md](backend-architecture/service-layer-patterns.md)
-5. [frontend-architecture/README.md](frontend-architecture/README.md)
-6. [frontend-architecture/api-integration-patterns.md](frontend-architecture/api-integration-patterns.md)
-7. [frontend-architecture/app-bootstrap-and-state.md](frontend-architecture/app-bootstrap-and-state.md)
-8. [frontend-architecture/network-and-mobile-runtime.md](frontend-architecture/network-and-mobile-runtime.md)
-9. [devops-and-tooling/README.md](devops-and-tooling/README.md)
+| Page | Focus | What's inside |
+| --- | --- | --- |
+| [System Overview](index.html) | What the system is, who uses it, what it does at scale | Hero, system-shape cards, request-flow diagram, representative-patterns grid, live store badges, screenshot grid, real client roster |
+| [Backend Architecture](backend.html) | Laravel-side patterns worth highlighting | Tenant connection catalog, request-time database switching, multi-tenant login, service-layer domain logic, deferred activity logging, Process Authority approval workflow, immutable preserved billing, multi-format bill generation, internal cross-service PDF endpoint, bulk broadcast delivery |
+| [Frontend Architecture](frontend.html) | Flutter-side patterns worth highlighting | Resilient bootstrap with FCM retry, platform-aware token retrieval, Riverpod state graph, runtime tenant context, unified request and upload handling, binary PDF download with progress and fallback, WebView payment flow, device fingerprinting, thin controllers / fat services |
+| [Tooling & Operations](tooling.html) | How the system is run locally and in production | One-command multi-service boot script, editor configuration for a nested Flutter project, iOS debugging fallback, GitHub Actions deployment to VPS, real screenshots of the running services and editor |
 
-## Evidence Areas Covered In This Showcase
+> **Tip:** Open the pages in the order above. Each one builds on the previous, but each one also stands on its own.
 
-### Backend architecture
-- multi-backend Laravel structure
-- middleware-driven access control
-- configuration-based tenant routing
-- service-layer billing and account processing
-- API rate limiting and request shaping
-- sanitized code samples for tenant switching and domain logic
+---
 
-### Frontend architecture
-- Flutter app bootstrapping and dependency initialization
-- Riverpod-based application state patterns
-- resilient networking and upload logic
-- PDF and binary document handling
-- mobile runtime considerations for iOS and device-based debugging
-- sanitized code samples for API integration and app startup
+## The four applications
 
-### Tooling and operations
-- monorepo-friendly editor setup
-- local multi-service boot process
-- physical device testing workflow
-- practical debugging setup for Flutter in a parent-folder workspace
+### `admin-backend` — Operations
 
-## Screenshot Placeholders
+A session-aware Laravel application used by internal staff for day-to-day operations. Includes tenant-aware administration, billing and payment workflows, route-level permission management, and deferred audit logging.
 
-Use the following placeholders when preparing the final employer-facing version:
+**Highlighted patterns:**
+- Multi-tenant database connection switching via `DB::purge()` + `DB::reconnect()`
+- Deferred activity logging via `app()->terminating()` so audit overhead never blocks the user-facing request
+- The **Process Authority** pattern — privileged actions are gated by an explicit permission slot; junior staff requests are parked in an **Admin Desk** inbox for senior approval, all from the same controller path
+- Immutable **PreservedBilling** snapshots — every generated bill is snapshotted to a dedicated table with a content hash, so the printed document remains trustworthy even if the source data is later edited
+- Multi-format bill generation — the same billing pipeline produces pre-printed overlays, fully generated documents, thermal receipts, and mobile softcopies
+- Hierarchical route permission system with bulk operations, user-level overrides, and expiry support
 
-- `assets/admin-dashboard-overview.png`
-  Caption: "Admin operations dashboard showing the internal control surface for staff workflows."
-- `assets/board-dashboard-analytics.png`
-  Caption: "Board analytics dashboard focused on cross-business visibility and executive reporting."
-- `assets/mobile-home-screen.png`
-  Caption: "Flutter mobile home screen showing the client-facing experience."
-- `assets/mobile-billing-screen.png`
-  Caption: "Flutter billing or statement screen demonstrating end-user financial workflows."
-- `assets/system-architecture-diagram.png`
-  Caption: "High-level architecture diagram for the full Laravel and Flutter system."
+### `board-backend` — Oversight
 
-## Sanitization Policy
+A Laravel application used by executives and stakeholders. Focused on cross-tenant reporting, deployment analytics, and governance dashboards. Isolated from operational CRUD to keep the reporting surface clean and the permission boundary obvious.
 
-The public version of this showcase should keep the architecture intact while removing anything sensitive.
+### `client-backend` — Mobile API
 
-That means:
+A Laravel application optimized for authenticated mobile requests. Provides tenant discovery, account workflows, payment initialization, document retrieval, and webhook endpoints. The Flutter client talks to this application exclusively.
 
-- replace real tenant or client names with generic identifiers such as `Tenant A` and `Tenant B`
-- remove secrets, tokens, passwords, and internal URLs
-- avoid publishing live operational metrics
-- keep screenshots blurred or redacted where necessary
-- explain the decision-making and patterns, not the confidential business details
+**Highlighted patterns:**
+- A shared-secret internal endpoint (`X-Internal-Secret`) that the client backend uses to request PDF rendering from the admin backend, switching tenant connections on the way in
+- Forward-compatible response handling — the Flutter client can consume either streamed binary PDFs or JSON base64 envelopes from older deployments
 
-## Recommended Next Additions
+### `client-frontend` — Flutter mobile app
 
-This documentation layer is now in place. The next high-value additions are:
+A Flutter application for iOS and Android. Manages tenant context locally, brokers a complete payment-and-receipt flow, and supports 9+ tenant deployments from a single code line.
 
-1. one or two simplified architecture diagrams
-2. real screenshots dropped into the `assets` folder using the placeholder filenames
-3. a short portfolio landing page or separate public repository that links to this showcase
-4. optional short case-study pages focused on outcomes, trade-offs, and lessons learned
+**Highlighted patterns:**
+- Riverpod state graph — every long-lived piece of state is a typed provider; screens read with `ref.watch` and mutate with `ref.read(...notifier).state = ...`
+- Tenant-aware request headers — the active business is stamped into request headers once, and individual calls never have to remember to attach the tenant key
+- Platform-aware FCM token retrieval — iOS waits for APNs, Android invalidates stale Play Services tokens, both with progressive backoff
+- Resilient PDF download with progress callbacks and JSON base64 fallback
+- WebView-based payment flow with deep-link reconciliation — the user is never stuck on a payment screen
+
+---
+
+## Representative engineering patterns
+
+| # | Pattern | Where it lives | Why it matters |
+| --- | --- | --- | --- |
+| 01 | Multi-tenant connection switching | `admin-backend` | Tenant isolation is structural, not enforced by query-level filters |
+| 02 | Deferred activity logging | `admin-backend` | Audit overhead never blocks the user-facing request |
+| 03 | Process Authority approval workflow | `admin-backend` | Privileged actions require an explicit permission slot; junior requests are parked for senior approval |
+| 04 | Immutable preserved billing | `admin-backend` | Generated bills are cryptographically trustworthy even after source data changes |
+| 05 | Multi-format bill generation | `admin-backend` | One pipeline produces overlays, complete documents, thermal receipts, and mobile softcopies |
+| 06 | Internal cross-service PDF endpoint | `client-backend` + `admin-backend` | Shared-secret endpoint switches tenants and reuses the admin pipeline for rendering |
+| 07 | Resilient app bootstrap with FCM retry | `client-frontend` | iOS APNs timing and Android Play Services stalls are handled inside the FCM layer |
+| 08 | Platform-aware FCM token retrieval | `client-frontend` | The rest of the codebase never has to ask "what platform am I on" |
+| 09 | Riverpod state graph | `client-frontend` | Single source of truth for every long-lived piece of state in the app |
+| 10 | Runtime tenant context through shared headers | `client-frontend` | The active business is stamped into request headers once at connection selection |
+| 11 | Unified request and upload handling | `client-frontend` | Pre-flight connectivity check, multipart upload, JSON POST — all through one method |
+| 12 | Binary PDF download with progress and fallback | `client-frontend` | Older deployments keep working, newer deployments stream faster |
+| 13 | WebView payment flow with deep-link reconciliation | `client-frontend` | The user is never stuck on a payment screen |
+| 14 | One-command multi-service boot | repository root | One script replaces three separate terminals |
+| 15 | Editor configuration for a nested Flutter project | `.vscode/` | The Dart analyzer stays enabled inside a Laravel-heavy workspace |
+| 16 | GitHub Actions deployment to VPS | `.github/workflows/` | Production server state always matches the repository state |
+
+---
+
+## Production-credentials details
+
+### Companies running AWMAS in production
+
+The platform is the day-to-day operational backbone for these businesses:
+
+- Nureni Saka Enterprises
+- Labcleanings Waste Services
+- Olamper Environmental Services
+- Imperium Waste Services
+- Favoreno Gobal Services
+- Captalgee Ventures Limited
+- Cuttysark Waste Limited
+- Nasbebag Nigeria Limited
+- Century Cleaners
+- Precious Addy Nigeria Limited
+- Olajendor Waste Services
+
+Several of these companies use the Flutter mobile client to deliver bills and collect payments from their own customers — the same app that has accumulated 4,000+ downloads on the App Store and Google Play, and that processes a minimum of ₦25,000,000 in customer payments every month.
+
+---
+
+## Repository structure
+
+```text
+architecture-showcase/
+├── README.md                   ← you are here
+├── index.html                  ← System Overview page
+├── backend.html                ← Backend Architecture page
+├── frontend.html               ← Frontend Architecture page
+├── tooling.html                ← Tooling & Operations page
+├── css/
+│   └── styles.css              ← Single shared design system
+├── js/
+│   └── app.js                  ← Theme toggle, sidebar, mobile menu
+├── images/                     ← Screenshots and architecture diagrams
+│   ├── admin-dashboard.png
+│   ├── board-analytics.png
+│   ├── flutter-app-screens.png
+│   ├── system-architechture.jpeg
+│   ├── editor-settings.png
+│   └── running-services.png
+└── serve-showcase.sh           ← Optional one-liner local preview server
+```
+
+The four HTML pages are a static site. There is no build step. Open `index.html` directly in a browser, or run the included bash script to serve the directory over HTTP.
+
+---
+
+## Local development and serving the showcase
+
+### Option 1 — Open directly
+
+The pages are fully self-contained. Double-click `index.html` in a file browser, or:
+
+```bash
+open index.html
+```
+
+### Option 2 — Serve over HTTP
+
+Some browsers restrict certain features (like the Fetch API) when the page is opened from `file://`. To preview correctly:
+
+```bash
+./serve-showcase.sh
+# Then open http://localhost:8000
+```
+
+Or, equivalently:
+
+```bash
+python3 -m http.server 8000
+# Then open http://localhost:8000
+```
+
+The site uses:
+- **Inter** (sans-serif body) and **Fira Code** (monospace code) from Google Fonts
+- **highlight.js** for code syntax highlighting (loaded from CDN)
+- **No build tools** — every page is valid HTML5, vanilla CSS, and vanilla JavaScript
+
+### Theme toggle
+
+Every page has a light/dark theme toggle in the top bar. The choice persists in `localStorage`.
+
+---
+
+## Sanitization policy
+
+This public showcase keeps the architecture, the patterns, the engineering decisions, and the production-credentials signals intact, while removing anything sensitive.
+
+**Removed from the public version:**
+- Database credentials, API keys, and secret tokens
+- Real tenant identifiers, real LGA / ward / street names, and real property addresses
+- Real client phone numbers, email addresses, and contact details
+- Real payment-gateway API keys and webhook secrets
+- The production deployment URL for the mobile client
+- The actual iOS bundle identifier
+- The Cloudflare Turnstile site key
+- Internal email addresses for staff notifications
+
+**Kept in the public version (because they are the point of the showcase):**
+- Real company names of the 11 production customers (with their consent)
+- The 4,000+ download count from the App Store and Google Play
+- The ₦25M+ minimum monthly transaction volume
+- The number of tenant databases (9+) and the connection-catalog pattern
+- All the engineering patterns — these are the value of the showcase
+- The GitHub Actions deployment workflow — with secrets referenced as `${{ secrets.* }}` and the production path scrubbed to a generic `/var/www/awmas`
+- The store listing URLs for the Flutter app — so employers can verify the production app themselves
+
+---
+
+## About this showcase
+
+This folder is the public companion to four private repositories:
+
+- `admin-backend` — Operational Laravel backend
+- `board-backend` — Oversight Laravel backend
+- `client-backend` — Mobile Laravel backend
+- `client-frontend` — Flutter mobile application
+
+The goal of this showcase is straightforward: **give employers a credible, code-level view of how I design, structure, and operate full-stack systems**, without exposing sensitive source code, credentials, or client-identifying business data.
+
+If a hiring manager or engineering lead would like to discuss the live production system in more detail, the store listings, the deployment workflow, or any of the patterns documented here, the contact information is on my profile.
+
+---
+
+<div align="center">
+
+**AWMAS architecture case study** · Public technical documentation · All names and metrics are real and verifiable.
+
+</div>
