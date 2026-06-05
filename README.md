@@ -4,7 +4,7 @@ A public-facing technical showcase for a real production monorepo: **three Larav
 
 This repository is the **public, sanitized companion** to the production system. The source code for the four live applications is in private repositories. What is published here is a credible, code-level walkthrough of how the system is designed, how the pieces communicate, and how it is operated in real production conditions.
 
-> Open the [live website](https://github.com/your-username/awmas-architecture-showcase) for the rendered version, or read the [architecture pages](#table-of-contents) directly in this repository.
+> Open the [live website](https://yusuf-kolayo.github.io/awmas-architecture/index.html) for the rendered version, or read the [architecture pages](#table-of-contents) directly in this repository.
 
 ---
 

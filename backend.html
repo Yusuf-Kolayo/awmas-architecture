@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWMAS — Backend Architecture</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="backend">
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>AWMAS Case Study</h1>
+                <div class="subtitle">Laravel + Flutter architecture</div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Overview</div>
+                    <a class="nav-link" data-page="overview" href="index.html">System Overview</a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Architecture</div>
+                    <a class="nav-link" data-page="backend" href="backend.html">Backend</a>
+                    <a class="nav-link" data-page="frontend" href="frontend.html">Frontend</a>
+                    <a class="nav-link" data-page="tooling" href="tooling.html">Tooling</a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                Public technical documentation. Source code, secrets, and tenant data have been sanitized or removed.
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <button id="mobile-menu-btn" class="icon-btn" aria-label="Toggle menu">
+                    <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                </button>
+                <div class="spacer"></div>
+                <button id="theme-toggle" class="icon-btn" aria-label="Toggle theme">
+                    <svg class="sun-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    <svg class="moon-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </button>
+            </header>
+
+            <div class="content-wrapper">
+                <div class="page long-form">
+                    <section class="hero">
+                        <div class="eyebrow">Backend</div>
+                        <h2>Three Laravel services, one shared multi-tenant model.</h2>
+                        <p class="lead">
+                            The backend is built around separation of concerns. Operational, oversight, and mobile workflows run in three distinct Laravel applications, while still sharing a configuration-driven model for tenant routing.
+                        </p>
+                    </section>
+
+                    <h2 id="service-strategy">The three-service strategy</h2>
+                    <p>The system intentionally avoids a single catch-all API. Each Laravel application owns a different audience and a different data boundary.</p>
+
+                    <div class="card-grid three">
+                        <article class="card">
+                            <h3>admin-backend</h3>
+                            <p>Internal staff application. Session-aware middleware, role enforcement, request-time database switching, and data maintenance workflows.</p>
+                        </article>
+                        <article class="card">
+                            <h3>board-backend</h3>
+                            <p>Executive and stakeholder oversight. Reporting routes, cross-business analytics, and deployment views, isolated from operational CRUD.</p>
+                        </article>
+                        <article class="card">
+                            <h3>client-backend</h3>
+                            <p>Mobile API surface. API-key protected routes, throttled endpoints, mobile account workflows, payment webhooks, and account statement document generation.</p>
+                        </article>
+                    </div>
+
+                    <h2 id="tenant-routing">Tenant-aware database routing</h2>
+                    <p>
+                        The platform supports multiple business deployments under one codebase. Each deployment points to its own database credentials through environment variables, allowing one application to route traffic to many isolated tenant datasets.
+                    </p>
+
+                    <h3>Connection catalog</h3>
+                    <p>
+                        The Laravel database configuration file acts as a catalog that maps logical connection names to environment-driven credentials. This centralizes infrastructure topology in one inspectable file and keeps secrets out of version control.
+                    </p>
+
+<pre><code class="language-php">// config/database.php (sanitized excerpt)
+
+'connections' => [
+
+    // Shared default for the public-facing mobile backend
+    'mysql' => [
+        'driver'   => 'mysql',
+        'host'     => env('DB_HOST', '127.0.0.1'),
+        'port'     => env('DB_PORT', '3306'),
+        'database' => env('DB_DATABASE', ''),
+        'username' => env('DB_USERNAME', ''),
+        'password' => env('DB_PASSWORD', ''),
+        'charset'  => 'utf8mb4',
+        'collation'=> 'utf8mb4_unicode_ci',
+    ],
+
+    // Tenant A through Tenant I - each one isolated
+    'tenant_a' => [
+        'driver'   => 'mysql',
+        'host'     => env('TENANT_A_DB_HOST', '127.0.0.1'),
+        'port'     => env('TENANT_A_DB_PORT', '3306'),
+        'database' => env('TENANT_A_DATABASE', ''),
+        'username' => env('TENANT_A_USERNAME', ''),
+        'password' => env('TENANT_A_PASSWORD', ''),
+        'charset'  => 'utf8mb4',
+        'collation'=> 'utf8mb4_unicode_ci',
+    ],
+    // ... tenant_b, tenant_c, ...
+],</code></pre>
+
+                    <h3>Request-time database switching</h3>
+                    <p>
+                        A custom middleware reads the active tenant context from the session and switches the default connection for the lifecycle of the request. This allows the same controller to safely serve data for any tenant without duplicating business logic.
+                    </p>
+
+<pre><code class="language-php">// app/Http/Middleware/SwitchDatabaseConnection.php (sanitized excerpt)
+
+public function handle(Request $request, Closure $next)
+{
+    $session = session();
+
+    // 1. Resolve the active tenant key from the session
+    $tenant = $session->get('active_tenant_connection');
+
+    // 2. Validate the tenant is a known connection
+    $allowed = config('database.tenant_connections', []);
+    if (! $tenant || ! in_array($tenant, $allowed, true)) {
+        // Fall back to the default connection if none is selected
+        return $next($request);
+    }
+
+    // 3. Reconfigure the default connection for this request
+    config([
+        'database.default' => $tenant,
+    ]);
+
+    // 4. Purge the resolved connection so the new config takes effect
+    DB::purge($tenant);
+    DB::reconnect($tenant);
+
+    return $next($request);
+}</code></pre>
+
+                    <h3>Mobile connection discovery</h3>
+                    <p>
+                        The Flutter app cannot share a session with the internal portals, so tenant resolution happens at the request boundary instead. A small service enumerates the labeled connections the backend knows about, the client picks one and the backend reads it from a request header on every call. The same validation rule — must be a known connection — applies at every entry point.
+                    </p>
+
+                    <h2 id="service-layer">Service-layer domain logic</h2>
+                    <p>
+                        Complex business rules live in dedicated service classes rather than being scattered across controllers. This keeps controllers thin, concentrates domain knowledge in one place, and makes the rules unit-testable without touching the HTTP layer.
+                    </p>
+
+                    <h3>Services as domain coordinators</h3>
+                    <p>
+                        A service in this codebase owns a small, named part of the business — accounts, broadcasts, mail, FCM — and exposes operations that the controllers compose. The service is responsible for loading the right records, applying the right invariants, and writing a structured result that controllers can hand back to the user. The example below is the real account service reduced to its load-and-summarize shape.
+                    </p>
+
+<pre><code class="language-php">// app/Services/AccountService.php (sanitized excerpt)
+
+public function initializeAccount(string $propertyId): bool
+{
+    $client = Client::where('property_id', $propertyId)->first();
+    if (! $client) {
+        return false;
+    }
+
+    if (Account::where('property_id', $propertyId)->exists()) {
+        return true; // already initialized
+    }
+
+    Account::create([
+        'property_id'         => $propertyId,
+        'cumulative_payment'  => 0,
+        'cumulative_bill'     => 0,
+    ]);
+
+    return true;
+}
+
+public function getAccountInfo(string $propertyId): ?array
+{
+    $account = Account::where('property_id', $propertyId)->first();
+    if (! $account) {
+        return null;
+    }
+
+    // Live aggregations from the source-of-truth tables
+    $billed    = Billing::where('property_id', $propertyId)
+        ->whereNull('deleted_at')
+        ->sum('monthly_rate');
+
+    $paid = Payment::where('property_id', $propertyId)
+        ->whereNull('deleted_at')
+        ->where('status', 'approved')
+        ->sum('amount');
+
+    // The user-facing view is derived, not stored
+    $prepaid  = max(0, $paid - $account->cumulative_bill);
+    $arrears  = max(0, $account->cumulative_bill - $paid);
+
+    return [
+        'cumulative_payment' => $account->cumulative_payment,
+        'cumulative_bill'    => $account->cumulative_bill,
+        'prepaid'            => $prepaid,
+        'arrears'            => $arrears,
+    ];
+}</code></pre>
+
+                    <p class="note">
+                        Deeper domain patterns — the smart fallback for insufficient balance, the immutable preserved billing snapshot, the Process Authority approval flow — are explored in detail further down this page.
+                    </p>
+
+                    <h2 id="core-patterns">Core business patterns</h2>
+                    <p>
+                        Beyond the structural foundation of multi-tenant routing and service-layer design, the admin backend contains a number of business patterns that shape how the platform actually behaves. The samples below have been simplified for readability, but the underlying ideas are exactly what runs in production.
+                    </p>
+
+                    <div class="pattern-index">
+                        <div class="pattern-index-item"><span class="pi-num">01</span><a href="#pattern-login-routing">Multi-tenant login and connection switching</a></div>
+                        <div class="pattern-index-item"><span class="pi-num">02</span><a href="#pattern-deferred-activity">Deferred activity logging</a></div>
+                        <div class="pattern-index-item"><span class="pi-num">03</span><a href="#pattern-process-authority">Process Authority approval workflow</a></div>
+                        <div class="pattern-index-item"><span class="pi-num">04</span><a href="#pattern-multi-format-billing">Multi-format bill generation</a></div>
+                        <div class="pattern-index-item"><span class="pi-num">05</span><a href="#pattern-preserved-billing">Immutable preserved billing snapshots</a></div>
+                        <div class="pattern-index-item"><span class="pi-num">06</span><a href="#pattern-remark-state-machine">Remark lifecycle state machine</a></div>
+                        <div class="pattern-index-item"><span class="pi-num">07</span><a href="#pattern-internal-pdf-endpoint">Internal cross-service PDF endpoint</a></div>
+                        <div class="pattern-index-item"><span class="pi-num">08</span><a href="#pattern-account-fallback">Account service smart fallback</a></div>
+                        <div class="pattern-index-item"><span class="pi-num">09</span><a href="#pattern-hierarchical-permissions">Hierarchical permission system</a></div>
+                    </div>
+
+                    <h3 id="pattern-login-routing">Multi-tenant connection switching at login</h3>
+                    <p>
+                        A single login endpoint serves every tenant deployment. When a user submits credentials, the controller resolves the chosen tenant key, swaps the default database connection for the lifetime of the request, and authenticates against the new connection. A second "system administrator" password acts as a maintenance kill switch, allowing operators to enter any tenant for support without modifying real passwords.
+                    </p>
+
+<pre><code class="language-php">// app/Http/Controllers/AuthController.php (sanitized excerpt)
+
+public function loginPost(Request $request)
+{
+    $request->validate([
+        'username'    => 'required|string',
+        'password'    => 'required|string',
+        'connection'  => 'required|string',
+        'cf-turnstile-response' => 'nullable|string',
+    ]);
+
+    // 1. Validate Cloudflare Turnstile challenge if enabled
+    $turnstileSecret = config('turnstile.secret_key');
+    if (!empty($turnstileSecret)) {
+        $ok = Http::asForm()->post(
+            'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+            [
+                'secret'   => $turnstileSecret,
+                'response' => $request->input('cf-turnstile-response'),
+                'remoteip' => $request->ip(),
+            ]
+        )->json('success');
+
+        if (!$ok) {
+            return back()->with('error', 'Security check failed.');
+        }
+    }
+
+    $connectionName = $request->input('connection');
+    $lgaConfig      = $this->getLGAConfiguration($connectionName);
+
+    if (!$lgaConfig) {
+        return back()->with('error', 'Invalid business selected');
+    }
+
+    // 2. Reconfigure and reconnect to the tenant's database
+    Config::set('database.default', $connectionName);
+    DB::purge($connectionName);
+    DB::reconnect($connectionName);
+
+    // 3. Look up the user on the resolved connection
+    $user = User::on($connectionName)
+        ->where('username', $request->input('username'))
+        ->first();
+
+    if (!$user) {
+        return back()->with('error', 'User not found in the selected business');
+    }
+
+    // 4. Maintenance kill switch: a master password grants entry
+    $sysAdminPassword = config('auth.sys_admin_password');
+    $isSystemAdmin    = false;
+
+    if ($sysAdminPassword && $request->input('password') === $sysAdminPassword) {
+        $isSystemAdmin = true;
+        Log::info("System administrator override login: {$user->username}");
+    } elseif (!Hash::check($request->input('password'), $user->password)) {
+        return back()->with('error', 'Invalid credentials');
+    }
+
+    Auth::login($user);
+    Session::put('selected_lga', $lgaConfig);
+
+    // 5. Persist system-admin flag so downstream code can hide activity
+    Session::put('is_system_admin', $isSystemAdmin);
+
+    return redirect()->route('dashboard');
+}</code></pre>
+
+                    <p class="note">
+                        Every controller downstream of login can now use standard Eloquent calls and trust that the data belongs to the active tenant. The connection switch is structural, not opt-in.
+                    </p>
+
+                    <h3 id="pattern-deferred-activity">Deferred activity logging</h3>
+                    <p>
+                        Every staff action is recorded for the audit trail. To keep the user-facing request fast, the database write is handed off to Laravel's terminating callback, which runs after the HTTP response has been flushed to the client. If the write fails, the failure is logged but does not roll back the user's operation.
+                    </p>
+
+<pre><code class="language-php">// app/Http/Controllers/BaseController.php (sanitized excerpt)
+
+protected function register_new_activity(string $description): void
+{
+    try {
+        // Maintenance override: skip logging while system admin is active
+        if (Session::get('is_system_admin', false)) {
+            return;
+        }
+
+        $request       = request();
+        $routeName     = Route::currentRouteName();
+        $routeMetadata = \App\Http\RouteMetadata::getRouteMetadata($routeName);
+
+        // Build the payload NOW so all request context is captured
+        $payload = [
+            'user_id'      => Auth::id(),
+            'action_type'  => $routeMetadata['action_type'],
+            'module'       => $routeMetadata['module'],
+            'description'  => $description ?: $routeMetadata['description'],
+            'route_name'   => $routeName,
+            'url'          => $request->fullUrl(),
+            'method'       => $request->method(),
+            'ip_address'   => $request->ip(),
+            'user_agent'   => $request->userAgent(),
+            'session_id'   => $request->session()->getId(),
+            'request_data' => json_encode($this->sanitizeRequestData($request->all())),
+            'severity'     => $routeMetadata['severity'],
+            'status'       => 'success',
+            'is_api_request' => $request->expectsJson() ? 1 : 0,
+            'created_at'   => now(),
+        ];
+
+        // Defer the write until AFTER the response is sent
+        app()->terminating(function () use ($payload) {
+            try {
+                Activity::create($payload);
+            } catch (\Throwable $e) {
+                Log::error('Failed to register activity: ' . $e->getMessage());
+            }
+        });
+    } catch (\Throwable $e) {
+        // Never let audit logging break the user-facing operation
+        Log::error('Failed to register activity: ' . $e->getMessage());
+    }
+}</code></pre>
+
+                    <p class="note">
+                        The metadata catalog (<code>RouteMetadata</code>) is the single source of truth for what each route should be classified as: action type, module, severity, and whether it is sensitive. The controller never hardcodes those decisions.
+                    </p>
+
+                    <h3 id="pattern-process-authority">Process Authority approval workflow</h3>
+                    <p>
+                        Not every staff member is allowed to record a payment, edit a bill, or write off debt. When a junior member attempts a privileged action, the request is parked in an <strong>Admin Desk</strong> inbox for a senior approver. The same controller serves both paths and the workflow is encoded in the controller itself.
+                    </p>
+
+<pre><code class="language-php">// app/Http/Controllers/PaymentController.php (sanitized excerpt)
+
+public function recordPaymentPost(Request $request)
+{
+    $request->validate([
+        'property_id'     => 'required|exists:clients,property_id',
+        'depositor_name'  => 'required|string|max:255',
+        'payment_amount'  => 'required|numeric|min:0.01',
+        'date_paid'       => 'required|date|before_or_equal:today',
+        'payment_method'  => 'required|in:cash,bank_deposit,terminal',
+        'bank_id'         => 'nullable|numeric',
+    ]);
+
+    $client = Client::where('property_id', $request->property_id)->firstOrFail();
+
+    // Remittance-as-last-operation rule: a remittance is final
+    $lastRemittance = PaymentRemittance::where('staff_id', auth()->id())
+        ->orderBy('remittance_date', 'desc')
+        ->first();
+
+    if ($lastRemittance
+        && Carbon::parse($request->date_paid)->isSameDay($lastRemittance->remittance_date)
+    ) {
+        return back()->with('error',
+            'A remittance has already been submitted for this date. Remittances must be the last operation of the day.');
+    }
+
+    // Process Authority check
+    if (! $this->checkProcessAuthority('payment_record')) {
+        // Park the request for senior approval
+        $this->createAdminDeskEntry([
+            'action_type'        => 'create',
+            'action_description' => "Payment record request: ₦"
+                . number_format($request->payment_amount, 2)
+                . " for {$client->name} (Property {$client->property_id})",
+            'authority_type'     => 'payment_record',
+            'new_data'           => $request->only([
+                'property_id', 'depositor_name', 'payment_amount',
+                'date_paid', 'bank_id', 'teller_no',
+            ]),
+            'priority'           => 'normal',
+        ]);
+
+        return back()->with('info', 'Payment request submitted for admin approval.');
+    }
+
+    // Senior path: write directly, inside a transaction
+    DB::beginTransaction();
+    try {
+        $transaction = $this->accountService->processAccountTransaction(
+            $client->property_id,
+            $request->payment_amount,
+            'payment_made',
+            'Payment made by ' . $request->depositor_name,
+            'cumulative_payment',
+            'increase'
+        );
+
+        Payment::create([
+            'property_id'         => $client->property_id,
+            'amount'              => $request->payment_amount,
+            'account_statement_id'=> $transaction['statement']->id,
+            'method'              => $request->payment_method,
+            'status'              => 'approved',
+            'review_status'       => auth()->user()->isSenior() ? 'reviewed' : 'pending',
+            'old_outstanding'     => $transaction['old_outstanding'],
+            'new_outstanding'     => $transaction['new_outstanding'],
+            'date_paid'           => $request->date_paid,
+            'recorded_by_id'      => auth()->id(),
+            'approved_by_id'      => auth()->id(),
+        ]);
+
+        DB::commit();
+        return redirect()->route('print_receipt');
+    } catch (\Throwable $e) {
+        DB::rollBack();
+        return back()->with('error', 'Error recording payment: ' . $e->getMessage());
+    }
+}</code></pre>
+
+                    <p class="note">
+                        The same <code>checkProcessAuthority()</code> guard protects the update, trash, and remittance actions. Each authority type is its own permission slot, so granting "payment record" does not grant "payment update" by default.
+                    </p>
+
+                    <h3 id="pattern-multi-format-billing">Multi-format bill generation pipeline</h3>
+                    <p>
+                        Bills need to be issued in four different physical formats depending on the workflow: pre-printed form overlay, fully generated document on blank paper, compact 58mm thermal receipt, and a softcopy sent through the mobile app. The same grouped billing data feeds all four, but the view layer is swapped at the very end of the pipeline.
+                    </p>
+
+<pre><code class="language-php">// app/Http/Controllers/BillingController.php (sanitized excerpt)
+
+public function generateBilling(Request $request)
+{
+    $request->validate([
+        'billing_criteria' => 'required|in:property_id,street,ward,lga,property_class,exported_json',
+        'start_month'      => 'required|date',
+        'end_month'        => 'required|date|after_or_equal:start_month',
+        'print_format'     => 'required|in:template_overlay_doc,completely_generated_doc,mobile_softcopy_doc,thermal_printer_doc',
+    ]);
+
+    // 1. Resolve the billings for the chosen window
+    $billings    = $this->resolveBillings($request);
+    $grouped     = $billings->groupBy('property_id');
+    $payBefore   = $this->resolvePayBeforeDate($request);
+    $company     = CompanySetting::pluck('setting_value', 'setting_key')->toArray();
+
+    // 2. PRESERVE: snapshot each bill for fraud prevention and audit
+    $preservedBillings = PreservedBilling::preserveBillingData(
+        $request->only(['billing_criteria', 'criteria_value']),
+        $grouped
+    );
+
+    $printData = compact('grouped', 'payBefore', 'company', 'preservedBillings');
+
+    // 3. ROUTE: hand off to the format-specific view
+    switch ($request->print_format) {
+        case 'mobile_softcopy_doc':
+            // Send each bill to its contacts via push + email
+            $broadcast = app(\App\Services\BroadcastService::class);
+            $stats = ['sent' => 0, 'failed' => 0];
+
+            foreach ($preservedBillings as $preserved) {
+                $r = $broadcast->sendPreservedBillingNotifications(
+                    $preserved,
+                    $preserved->client,
+                    $payBefore,
+                    $preserved->bill_id,
+                    auth()->id()
+                );
+                $stats['sent']   += $r['successful_deliveries'];
+                $stats['failed'] += $r['failed_deliveries'];
+            }
+            $printData['delivery_stats'] = $stats;
+            return view('print.billing_notification_view', $printData);
+
+        case 'thermal_printer_doc':
+            return view('print.billing_thermal_printer', $printData);
+
+        case 'completely_generated_doc':
+            $folder = $this->getBillPrintingFolder();
+            return view("print.{$folder}.billing_complete_generated", $printData);
+
+        case 'template_overlay_doc':
+        default:
+            $folder = $this->getBillPrintingFolder();
+            return view("print.{$folder}.billing_template_overlay", $printData);
+    }
+}</code></pre>
+
+                    <p class="note">
+                        The <code>print_format</code> switch is the entire presentation boundary. The query, the grouping, the preservation, and the activity logging are all format-agnostic, so adding a fifth format only means adding a new view file.
+                    </p>
+
+                    <h3 id="pattern-preserved-billing">Immutable preserved billing for fraud prevention</h3>
+                    <p>
+                        Every bill that is ever generated is written to a dedicated <code>preserved_billings</code> table as a frozen snapshot. Even if the underlying billing record is later edited or deleted, the snapshot remains. This is what makes the printed bill legally and operationally trustworthy.
+                    </p>
+
+<pre><code class="language-php">// app/Models/PreservedBilling.php (sanitized excerpt)
+
+public static function preserveBillingData(
+    array $meta,
+    \Illuminate\Support\Collection $groupedBillings
+): \Illuminate\Support\Collection {
+    $preserved = collect();
+
+    DB::transaction(function () use ($meta, $groupedBillings, &$preserved) {
+
+        foreach ($groupedBillings as $propertyId => $propertyBillings) {
+            $client = $propertyBillings->first()->client;
+
+            // Serialize the monthly breakdown exactly as printed
+            $monthly = $propertyBillings->map(fn ($b) => [
+                'month'        => $b->month,
+                'year'         => $b->year,
+                'monthly_rate' => (float) $b->monthly_rate,
+                'arrears_brought_forward' => (float) $b->arrears_brought_forward,
+                'amount_paid'  => (float) $b->amount_paid,
+            ])->values()->all();
+
+            $row = self::create([
+                'bill_id'           => self::generateBillId($propertyId),
+                'property_id'       => $propertyId,
+                'client_name'       => $client->name,
+                'client_custom_id'  => $client->custom_id,
+                'client_status'     => $client->status,
+                'street_name'       => $client->street?->name,
+                'ward_name'         => $client->ward?->name,
+                'lgovt_name'        => $client->ward?->localGovernment?->name,
+                'property_class_name' => $client->propertyClass?->name,
+                'monthly_breakdown' => json_encode($monthly),
+                'total_amount'      => array_sum(array_column($monthly, 'monthly_rate')),
+                'generated_at'      => now(),
+                'generated_by'      => auth()->id(),
+                'meta'              => json_encode($meta),
+                // Hash seals the snapshot for tamper detection
+                'content_hash'      => hash('sha256', json_encode($monthly) . $propertyId),
+            ]);
+
+            $preserved->push($row);
+        }
+    });
+
+    return $preserved;
+}</code></pre>
+
+                    <p class="note">
+                        The snapshot is wrapped in a single transaction and includes a content hash. If anyone edits a soft-deleted bill after the fact, the preserved copy and the underlying data will no longer match, and the verification endpoint can flag the discrepancy.
+                    </p>
+
+                    <h3 id="pattern-remark-state-machine">State machine for remark lifecycle</h3>
+                    <p>
+                        Client remarks have a strict lifecycle: open, resolved, expired, or dismissed. Once a remark leaves the open state, its core content (title, body, type, amount) is frozen. Only operational fields (priority, due date) can be updated, and even then the changes are diffed and recorded in the activity log.
+                    </p>
+
+<pre><code class="language-php">// app/Http/Controllers/ClientRemarkController.php (sanitized excerpt)
+
+public function updateStatus(Request $request)
+{
+    $request->validate([
+        'remark_id' => 'required|integer|exists:client_remarks,id',
+        'status'    => 'required|in:resolved,expired,dismissed',
+    ]);
+
+    $remark = ClientRemark::findOrFail($request->remark_id);
+
+    if (! $remark->isOpen()) {
+        return back()->with('error', 'This remark is no longer open.');
+    }
+
+    $userId = Auth::id();
+
+    // The model itself owns the state transitions
+    match ($request->status) {
+        'resolved'  => $remark->markResolved($userId),
+        'expired'   => $remark->markExpired($userId),
+        'dismissed' => $remark->markDismissed($userId),
+    };
+
+    $this->register_new_activity(
+        "Marked remark '{$remark->title}' as {$request->status}"
+    );
+
+    return back()->with('success', "Remark marked as {$request->status}.");
+}
+
+public function update(Request $request)
+{
+    $request->validate([
+        'remark_id' => 'required|integer|exists:client_remarks,id',
+        'priority'  => 'required|in:info,action_required,urgent',
+        'due_date'  => 'nullable|date',
+    ]);
+
+    $remark = ClientRemark::findOrFail($request->remark_id);
+
+    // Diff mutable fields only; immutable fields are not even in $request->validate()
+    $changes = [];
+    if ($remark->priority !== $request->priority) {
+        $changes[] = "priority: {$remark->priority} → {$request->priority}";
+    }
+    $newDue = $request->due_date ?: null;
+    if ($remark->due_date?->format('Y-m-d') !== $newDue) {
+        $changes[] = 'due date updated';
+    }
+
+    $remark->update($request->only(['priority', 'due_date']));
+
+    $diff = $changes ? ' (' . implode(', ', $changes) . ')' : '';
+    $this->register_new_activity("Updated remark '{$remark->title}'{$diff}");
+
+    return back()->with('success', 'Remark updated successfully.');
+}</code></pre>
+
+                    <p class="note">
+                        The controller's <code>validate()</code> call only lists the mutable fields. The immutable fields are not even accepted on the wire, so there is no need to defend against them in the model layer.
+                    </p>
+
+                    <h3 id="pattern-internal-pdf-endpoint">Internal cross-service PDF endpoint</h3>
+                    <p>
+                        The Flutter client needs to download a PDF copy of a bill, but the generation logic lives in the admin backend. Rather than duplicate it, the admin backend exposes an internal endpoint that accepts a shared secret header. The client-backend proxies the request with the secret attached, and the admin backend resolves the correct tenant connection from the request body.
+                    </p>
+
+<pre><code class="language-php">// app/Http/Controllers/BillingController.php (sanitized excerpt)
+
+public function generateBillPdfForClient(Request $request)
+{
+    // 1. Secret validation: only internal services may call this
+    $secret = $request->header('X-Internal-Secret');
+    if (! $secret || $secret !== env('INTERNAL_PDF_SECRET')) {
+        Log::warning('generateBillPdfForClient: invalid secret', [
+            'ip' => $request->ip(),
+        ]);
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
+
+    $request->validate([
+        'bill_id'        => 'required|string|max:50',
+        'connection_key' => 'required|string',
+    ]);
+
+    // 2. Switch to the right tenant connection for this request
+    $connectionKey = $request->input('connection_key');
+    $connectionConfig = config("database.connections.{$connectionKey}");
+
+    if ($connectionConfig) {
+        Config::set('database.default', $connectionKey);
+        app('db')->purge($connectionKey);
+
+        // Keep the session shape that getBillPrintingFolder() expects
+        session([
+            'selected_lga' => array_merge($connectionConfig, [
+                'database_connection' => $connectionKey,
+            ]),
+        ]);
+    }
+
+    // 3. Fetch the preserved bill
+    $preserved = PreservedBilling::where('bill_id', $request->input('bill_id'))->first();
+
+    if (! $preserved) {
+        return response()->json(['error' => 'Bill not found'], 404);
+    }
+
+    // 4. Render the full bill document and return it as a download
+    $html = view("print." . $this->getBillPrintingFolder() . ".billing_complete_generated_pdf", [
+        'preserved' => $preserved,
+    ])->render();
+
+    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML($html, 'UTF-8')
+        ->setPaper('a4', 'portrait');
+
+    return $pdf->download("bill_{$preserved->bill_id}.pdf");
+}</code></pre>
+
+                    <p class="note">
+                        The endpoint trusts the caller completely once the secret matches, but the secret is rotated through environment configuration, never checked into version control, and never exposed to the public API surface.
+                    </p>
+
+                    <h3 id="pattern-account-fallback">Account service smart fallback</h3>
+                    <p>
+                        Financial transactions must not silently lose updates. The account service uses two accounting primitives — <code>cumulative_bill</code> and <code>cumulative_payment</code> — and applies a smart fallback: if a decrease is requested against a primitive that has insufficient value, the operation is redirected to the other primitive to preserve the net effect, and the change is annotated in the resulting statement.
+                    </p>
+
+<pre><code class="language-php">// app/Services/AccountService.php (sanitized excerpt)
+
+public function processAccountTransaction(
+    string $propertyId,
+    float  $amount,
+    string $type,
+    string $description,
+    string $target = 'cumulative_payment',   // or 'cumulative_bill'
+    string $operation = 'increase',          // or 'decrease'
+    ?int   $adminDeskId = null
+): array {
+    $info = $this->getAccountInfo($propertyId) ?? $this->bootstrapInfo($propertyId);
+
+    $actualTarget    = $target;
+    $actualOperation = $operation;
+    $usedFallback    = false;
+
+    // Smart fallback: redirect the operation if the chosen primitive
+    // does not have enough value to absorb a decrease
+    if ($operation === 'decrease' && $info[$target] < $amount) {
+        $actualTarget    = $target === 'cumulative_payment'
+            ? 'cumulative_bill'
+            : 'cumulative_payment';
+        $actualOperation = 'increase';
+        $usedFallback    = true;
+
+        $description .= sprintf(
+            ' [Fallback: insufficient %s (₦%s) to decrease by ₦%s, increased %s instead]',
+            $target,
+            number_format($info[$target], 2),
+            number_format($amount, 2),
+            $actualTarget
+        );
+    }
+
+    $account = Account::where('property_id', $propertyId)->first();
+    $account->{$actualTarget} = $actualOperation === 'increase'
+        ? $account->{$actualTarget} + $amount
+        : max(0, $account->{$actualTarget} - $amount);
+    $account->save();
+
+    // Record the immutable account statement line
+    $updatedInfo = $this->getAccountInfo($propertyId);
+    $statement = AccountStatement::create([
+        'property_id'     => $propertyId,
+        'amount'          => $amount,
+        'type'            => $type,
+        'description'     => $description,
+        'old_outstanding' => $info['arrears'],
+        'new_outstanding' => $updatedInfo['arrears'],
+        'old_prepaid'     => $info['prepaid'],
+        'new_prepaid'     => $updatedInfo['prepaid'],
+        'actor_id'        => auth()->id(),
+        'admin_desk_id'   => $adminDeskId,
+    ]);
+
+    return [
+        'statement'      => $statement,
+        'used_fallback'  => $usedFallback,
+        'target_field'   => $actualTarget,
+        'operation'      => $actualOperation,
+        // ...other returned context for the caller
+    ];
+}</code></pre>
+
+                    <p class="note">
+                        The fallback is observable: the response payload exposes <code>used_fallback</code> and the original fields, so audit consumers can tell when a non-standard path was taken. The financial state stays correct in all cases.
+                    </p>
+
+                    <h3 id="pattern-hierarchical-permissions">Hierarchical permission system</h3>
+                    <p>
+                        Route permissions are not a flat list. Routes are grouped by domain (billing, payments, accounting, settings, etc.) and each group can be enabled, disabled, or marked "requires special permission" with a single bulk action. Individual users can still be granted or denied specific routes on top of the group default.
+                    </p>
+
+<pre><code class="language-php">// app/Http/Controllers/RoutePermissionController.php (sanitized excerpt)
+
+public function updateGroup(Request $request, string $groupName)
+{
+    $request->validate([
+        'action' => 'required|in:enable_all,disable_all,require_special_all,remove_special_all',
+        'routes' => 'sometimes|array',
+    ]);
+
+    $permissionGroups = RoutePermission::getPermissionGroupsWithRoutes();
+
+    if (! isset($permissionGroups[$groupName])) {
+        return response()->json(['error' => 'Permission group not found'], 404);
+    }
+
+    $routes      = $request->input('routes', array_keys($permissionGroups[$groupName]['routes']));
+    $updatedCount = 0;
+
+    foreach ($routes as $routeName) {
+        if (! RouteMetadata::routeExists($routeName)) {
+            continue;
+        }
+
+        // Translate the bulk action into a per-route setting
+        $settings = match ($request->input('action')) {
+            'enable_all'          => ['is_enabled' => true],
+            'disable_all'         => ['is_enabled' => false],
+            'require_special_all' => ['requires_special_permission' => true],
+            'remove_special_all'  => ['requires_special_permission' => false],
+        };
+
+        RoutePermission::setRoutePermission(
+            $routeName,
+            array_merge($settings, ['permission_group' => $groupName]),
+            auth()->id()
+        );
+        $updatedCount++;
+    }
+
+    return response()->json([
+        'success' => true,
+        'updated' => $updatedCount,
+    ]);
+}</code></pre>
+
+                    <p class="note">
+                        Bulk actions return the count of routes updated, so the UI can show a precise "47 routes updated" confirmation rather than just a generic success flash.
+                    </p>
+
+                    <h2 id="architectural-outcomes">Architectural outcomes</h2>
+                    <p>
+                        These patterns combine to create a backend that is resilient, trustworthy, and easy to operate at scale.
+                    </p>
+
+                    <div class="card-grid two">
+                        <article class="card">
+                            <h3>Structural data isolation</h3>
+                            <p>Tenant isolation is enforced at the database connection level, not the query level. This eliminates the risk of accidental cross-tenant data leakage caused by missing <code>where</code> clauses.</p>
+                        </article>
+                        <article class="card">
+                            <h3>Zero-code tenant onboarding</h3>
+                            <p>Adding a new business deployment requires only environment and configuration updates. No new tables or code changes are necessary to bring a new tenant online.</p>
+                        </article>
+                        <article class="card">
+                            <h3>Defensible audit trails</h3>
+                            <p>Privileged actions are explicitly gated by Process Authority, and every generated bill is preserved as an immutable snapshot. The system provides a legally and operationally trustworthy history.</p>
+                        </article>
+                        <article class="card">
+                            <h3>Isolated risk domains</h3>
+                            <p>Operational, oversight, and mobile concerns never share routes or controllers. This hard separation keeps permission boundaries clear and prevents external APIs from accidentally exposing internal workflows.</p>
+                        </article>
+                    </div>
+
+                    <footer class="page-footer">AWMAS architecture case study. <span id="current-year"></span></footer>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
