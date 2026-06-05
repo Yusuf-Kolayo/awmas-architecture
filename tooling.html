@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWMAS — Tooling & Operations</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="tooling">
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>AWMAS Case Study</h1>
+                <div class="subtitle">Laravel + Flutter architecture</div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Overview</div>
+                    <a class="nav-link" data-page="overview" href="index.html">System Overview</a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Architecture</div>
+                    <a class="nav-link" data-page="backend" href="backend.html">Backend</a>
+                    <a class="nav-link" data-page="frontend" href="frontend.html">Frontend</a>
+                    <a class="nav-link" data-page="tooling" href="tooling.html">Tooling</a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                Public technical documentation. Source code, secrets, and tenant data have been sanitized or removed.
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <button id="mobile-menu-btn" class="icon-btn" aria-label="Toggle menu">
+                    <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                </button>
+                <div class="spacer"></div>
+                <button id="theme-toggle" class="icon-btn" aria-label="Toggle theme">
+                    <svg class="sun-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    <svg class="moon-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </button>
+            </header>
+
+            <div class="content-wrapper">
+                <div class="page long-form">
+                    <section class="hero">
+                        <div class="eyebrow">Tooling</div>
+                        <h2>Operations that keep a multi-stack workspace runnable.</h2>
+                        <p class="lead">
+                            Three Laravel services and a Flutter app in one workspace is convenient for coordination, but it introduces local development friction. This page documents the operational tooling that keeps the system runnable day-to-day.
+                        </p>
+                    </section>
+
+                    <h2>One-command multi-service boot</h2>
+                    <p>
+                        A single root-level bash script starts all three Laravel services in the background, assigns distinct ports, binds the client backend to the local network so a physical device can reach it, and traps Ctrl+C to shut everything down cleanly.
+                    </p>
+
+<pre><code class="language-bash"># serve-all.sh (sanitized excerpt)
+
+echo "Starting all Laravel backends..."
+
+# Operations backend (internal staff portal)
+cd admin-backend
+php artisan serve --port=8000 &amp;
+PID_ADMIN=$!
+cd ..
+
+# Mobile API backend (Flutter client)
+cd client-backend
+php artisan serve --host=0.0.0.0 --port=8001 &amp;
+PID_CLIENT=$!
+cd ..
+
+# Oversight backend (executive portal)
+cd board-backend
+php artisan serve --port=8008 &amp;
+PID_BOARD=$!
+cd ..
+
+# Graceful shutdown: pressing Ctrl+C kills every backend
+cleanup() {
+  kill $PID_ADMIN $PID_CLIENT $PID_BOARD 2&gt;/dev/null
+  exit
+}
+trap cleanup SIGINT
+wait $PID_ADMIN $PID_CLIENT $PID_BOARD</code></pre>
+
+                    <h2>Editor configuration for a monorepo</h2>
+                    <p>
+                        When a Dart project is nested inside a larger workspace, the Dart analyzer does not pick it up by default. The workspace settings explicitly point the analyzer to the Flutter project so IntelliSense, autocomplete, and the device selector stay enabled.
+                    </p>
+
+<pre><code class="language-json">// .vscode/settings.json (sanitized excerpt)
+{
+  "dart.projectSearchPaths": [
+    "client-frontend"
+  ],
+  "dart.flutterHotReloadOnSave": "all"
+}</code></pre>
+
+                    <p>
+                        Launch configurations make it explicit which directory Flutter should run from, and provide a fallback profile for iOS debugging when the Dart Development Service (DDS) cannot bind to a local port on a physical iPhone.
+                    </p>
+
+<pre><code class="language-json">// .vscode/launch.json (sanitized excerpt)
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch Flutter App",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "cwd": "client-frontend"
+    },
+    {
+      "name": "Launch Flutter App (No DDS - iOS Fallback)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "cwd": "client-frontend",
+      "env": { "FLUTTER_NO_DDS": "1" }
+    }
+  ]
+}</code></pre>
+
+                    <h2>Automated deployment pipeline</h2>
+                    <p>
+                        Deployments are automated through GitHub Actions. Pushes to the main branch trigger a workflow that securely connects to the production VPS, pulls the latest code, and runs a predictable sequence of Laravel optimization commands to ensure zero downtime and fresh caches.
+                    </p>
+
+<pre><code class="language-yaml"># .github/workflows/deploy.yml (sanitized excerpt)
+
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /var/www/awmas
+            
+            # Pull latest code and force sync
+            git fetch origin main
+            git reset --hard origin/main
+            
+            # Install production dependencies
+            composer install --optimize-autoloader --no-dev
+            
+            # Clear all caches before re-caching
+            php artisan config:clear
+            php artisan route:clear
+            php artisan view:clear
+            
+            # Run migrations
+            php artisan migrate --force
+            
+            # Re-cache for production performance
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            
+            echo "Deployment successful!"</code></pre>
+
+                    <h2 id="architectural-outcomes">Architectural outcomes</h2>
+                    <p>
+                        This tooling setup reduces friction and removes human error from both the daily development loop and the production release cycle.
+                    </p>
+
+                    <div class="card-grid two">
+                        <article class="card">
+                            <h3>Predictable deployments</h3>
+                            <p>GitHub Actions eliminates manual SSH sessions and forgotten cache-clearing commands. The production server state always matches the repository state.</p>
+                        </article>
+                        <article class="card">
+                            <h3>Frictionless local boot</h3>
+                            <p>One script replaces three separate terminals and reduces the chance of leaving orphaned Laravel ports behind during development.</p>
+                        </article>
+                        <article class="card">
+                            <h3>Real-device API testing</h3>
+                            <p>The mobile API is bound to the local network instead of just localhost, so a physical iPhone on the same Wi-Fi can reach the development backend natively.</p>
+                        </article>
+                        <article class="card">
+                            <h3>Monorepo editor harmony</h3>
+                            <p>The editor stays useful even though the Flutter project is nested under a Laravel-heavy workspace, and iOS debugging has a fallback path that bypasses the DDS networking layer when needed.</p>
+                        </article>
+                    </div>
+
+                    <!-- <section class="section">
+                        <div class="section-header">
+                            <div class="eyebrow">Visual evidence</div>
+                            <h3 class="section-title">Screenshots can be attached here.</h3>
+                            <p class="section-copy">Drop redacted screenshots of the IDE setup, the running services, and the device selection overlay into the assets folder and reference them here.</p>
+                        </div>
+                        <div class="placeholder-grid">
+                            <div class="placeholder-card">
+                                <h3>Workspace settings</h3>
+                                <div class="asset-box">
+                                    <img src="images/editor-settings.png" alt="VS Code workspace configuration showing launch.json and serve-all.sh" style="width: 100%; height: auto; border-radius: var(--radius); border: 1px solid var(--border);">
+                                </div>
+                            </div>
+                            <div class="placeholder-card">
+                                <h3>Running services</h3>
+                                <div class="asset-box">
+                                    <img src="images/running-services.png" alt="Terminal showing all three Laravel backends running simultaneously via the boot script" style="width: 100%; height: auto; border-radius: var(--radius); border: 1px solid var(--border);">
+                                </div>
+                            </div>
+                            <div class="placeholder-card">
+                                <h3>Device selector</h3>
+                                <div class="asset-box">
+                                    Replace with screenshot of the device selector
+                                </div>
+                            </div>
+                            <div class="placeholder-card">
+                                <h3>Hot reload</h3>
+                                <div class="asset-box">
+                                    Replace with screenshot of the Flutter app running on a device
+                                </div>
+                            </div>
+                        </div>
+                    </section> -->
+
+                    <footer class="page-footer">AWMAS architecture case study. <span id="current-year"></span></footer>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

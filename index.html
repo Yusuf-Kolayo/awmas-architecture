@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWMAS — System Overview</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="overview">
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>AWMAS Case Study</h1>
+                <div class="subtitle">Laravel + Flutter architecture</div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Overview</div>
+                    <a class="nav-link" data-page="overview" href="index.html">System Overview</a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Architecture</div>
+                    <a class="nav-link" data-page="backend" href="backend.html">Backend</a>
+                    <a class="nav-link" data-page="frontend" href="frontend.html">Frontend</a>
+                    <a class="nav-link" data-page="tooling" href="tooling.html">Tooling</a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                Public technical documentation. Source code, secrets, and tenant data have been sanitized or removed.
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <button id="mobile-menu-btn" class="icon-btn" aria-label="Toggle menu">
+                    <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                </button>
+                <div class="spacer"></div>
+                <button id="theme-toggle" class="icon-btn" aria-label="Toggle theme">
+                    <svg class="sun-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    <svg class="moon-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </button>
+            </header>
+
+            <div class="content-wrapper">
+                <div class="page">
+                    <section class="hero">
+                        <div class="eyebrow">Case study</div>
+                        <h2>Three Laravel services, one Flutter client, one operational platform.</h2>
+                        <p class="lead">
+                            AWMAS is organized as a multi-application system with three distinct Laravel backends and one Flutter mobile client. Each application is responsible for a specific audience, a specific data boundary, and a specific set of workflows.
+                        </p>
+                        <div class="chips">
+                            <span class="chip">Laravel</span>
+                            <span class="chip">Flutter</span>
+                            <span class="chip">Riverpod</span>
+                            <span class="chip">Multi-tenancy</span>
+                            <span class="chip">Physical device testing</span>
+                        </div>
+                        <div class="hero-actions">
+                            <a class="button-link" href="backend.html">Backend architecture</a>
+                            <a class="ghost-link" href="frontend.html">Frontend architecture</a>
+                        </div>
+                    </section>
+
+                    <div class="metric-grid">
+                        <div class="metric">
+                            <div class="metric-value">4</div>
+                            <div class="metric-label">coordinated applications in one workspace</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">3</div>
+                            <div class="metric-label">Laravel services with separate responsibilities</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">1</div>
+                            <div class="metric-label">Flutter client for end-user delivery</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">9+</div>
+                            <div class="metric-label">tenant configurations under one codebase</div>
+                        </div>
+                    </div>
+
+                    <section class="section production-credentials">
+                        <div class="section-header">
+                            <div class="eyebrow">Production credentials</div>
+                            <h3 class="section-title">Actively running in production for 11 businesses.</h3>
+                            <p class="section-copy">
+                                AWMAS is not a prototype. It is the day-to-day operational backbone for waste-management and environmental-services companies across multiple Nigerian states — moving real money, issuing real bills, and serving real customer accounts every day.
+                            </p>
+                        </div>
+
+                        <div class="production-grid">
+                            <div class="production-stat">
+                                <div class="production-stat-value">11</div>
+                                <div class="production-stat-label">companies running AWMAS in production</div>
+                            </div>
+                            <div class="production-stat">
+                                <div class="production-stat-value">4,000+</div>
+                                <div class="production-stat-label">Flutter client downloads across both major app stores</div>
+                            </div>
+                            <div class="production-stat">
+                                <div class="production-stat-value">₦25M+</div>
+                                <div class="production-stat-label">processed through the Flutter client every month</div>
+                            </div>
+                        </div>
+
+                        <div class="app-store-row">
+                            <a class="store-btn" href="https://apps.apple.com/us/app/psp-hub-track-waste-bills/id6757864312" target="_blank" rel="noopener noreferrer" aria-label="Download on the App Store">
+                                <svg viewBox="0 0 384 512" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
+                                <div class="store-btn-text">
+                                    <span class="store-btn-small">Download on the</span>
+                                    <span class="store-btn-big">App Store</span>
+                                </div>
+                            </a>
+                            <a class="store-btn" href="https://play.google.com/store/apps/details?id=com.ashraafitworld.psphub" target="_blank" rel="noopener noreferrer" aria-label="Get it on Google Play">
+                                <svg viewBox="0 0 512 512" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.1 225L401.2 184l-69.7 69.7 69.7 69.7 71.9-41.1c20.7-16.4 20.7-50.4 0-66.8l.1.1zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z"/></svg>
+                                <div class="store-btn-text">
+                                    <span class="store-btn-small">GET IT ON</span>
+                                    <span class="store-btn-big">Google Play</span>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="eyebrow client-roster-label">Companies powered by AWMAS</div>
+                        <ul class="client-roster">
+                            <li>Nureni Saka Enterprises</li>
+                            <li>Labcleanings Waste Services</li>
+                            <li>Olamper Environmental Services</li>
+                            <li>Imperium Waste Services</li>
+                            <li>Favoreno Gobal Services</li>
+                            <li>Captalgee Ventures Limited</li>
+                            <li>Cuttysark Waste Limited</li>
+                            <li>Nasbebag Nigeria Limited</li>
+                            <li>Century Cleaners</li>
+                            <li>Precious Addy Nigeria Limited</li>
+                            <li>Olajendor Waste Services</li>
+                        </ul>
+                        <p class="section-copy client-roster-note">
+                            While most businesses still record customer payments manually through the admin-backend's payment-management screens, the Flutter mobile client processes a minimum of <strong>₦25,000,000 in customer payments every month</strong> across all tenants — bills issued, receipts delivered, and balances updated in real time from any location.
+                        </p>
+                    </section>
+
+                    <section class="section">
+                        <div class="section-header">
+                            <div class="eyebrow">System shape</div>
+                            <h3 class="section-title">One workspace, four applications, three operational audiences.</h3>
+                            <p class="section-copy">
+                                The system was deliberately split into multiple deployable applications instead of handled as a single monolith. This creates stronger permission boundaries, clearer routing responsibilities, and easier reasoning about internal versus external workflows.
+                            </p>
+                        </div>
+                        <div class="card-grid three">
+                            <article class="card">
+                                <h3>admin-backend</h3>
+                                <p>Operational dashboard for internal staff, billing workflows, tenant-aware administration, and data maintenance.</p>
+                            </article>
+                            <article class="card">
+                                <h3>board-backend</h3>
+                                <p>Oversight surface for executives and stakeholders, focused on reporting, cross-business visibility, and governance.</p>
+                            </article>
+                            <article class="card">
+                                <h3>client-backend + client-frontend</h3>
+                                <p>Secure mobile API and Flutter app pair for authentication, billing, payment flows, and document retrieval.</p>
+                            </article>
+                        </div>
+                    </section>
+
+                    <section class="section">
+                        <div class="section-header">
+                            <div class="eyebrow">Request flow</div>
+                            <h3 class="section-title">How traffic moves through the platform.</h3>
+                            <p class="section-copy">
+                                The Flutter client talks to the client API. Internal users use the admin and board portals. Each application resolves its own tenant context from session state or request headers, and routes the request to the correct isolated database.
+                            </p>
+                        </div>
+                        <div class="split">
+                            <div class="timeline">
+                                <div class="timeline-item">
+                                    <strong>Mobile client → client backend</strong>
+                                    <p>Authentication, billing, uploads, payments, PDF generation.</p>
+                                </div>
+                                <div class="timeline-item">
+                                    <strong>Operations staff → admin backend</strong>
+                                    <p>Operational workflows with request-time database switching.</p>
+                                </div>
+                                <div class="timeline-item">
+                                    <strong>Executives → board backend</strong>
+                                    <p>Reporting and oversight separated from operational CRUD.</p>
+                                </div>
+                            </div>
+                            <aside class="diagram-card">
+                                <div class="eyebrow">Data boundary</div>
+                                <div class="diagram-flow">
+                                    <div class="flow-row"><div class="flow-node">Flutter app</div><div class="flow-arrow">→</div><div class="flow-node">client API</div></div>
+                                    <div class="flow-row"><div class="flow-node">Operations</div><div class="flow-arrow">→</div><div class="flow-node">admin app</div></div>
+                                    <div class="flow-row"><div class="flow-node">Executives</div><div class="flow-arrow">→</div><div class="flow-node">board app</div></div>
+                                    <div class="flow-row"><div class="flow-node">Tenant DBs</div><div class="flow-arrow">↔</div><div class="flow-node">config routing</div></div>
+                                </div>
+                            </aside>
+                        </div>
+                    </section>
+
+                    <section class="section">
+                        <div class="section-header">
+                            <div class="eyebrow">Representative patterns</div>
+                            <h3 class="section-title">The logic that defines the system.</h3>
+                        </div>
+                        <div class="card-grid two">
+                            <article class="card">
+                                <h3>Tenant-aware database routing</h3>
+                                <p>Tenants are resolved dynamically. Internal users inherit context from session state. The mobile API resolves context from request headers and validated connection keys.</p>
+                                <a class="ghost-link" href="backend.html#tenant-routing">Open backend page</a>
+                            </article>
+                            <article class="card">
+                                <h3>Service-layer domain rules</h3>
+                                <p>Billing and account logic live in dedicated services with fallback-safe financial mutations, normalized billing summaries, and document-ready payload shaping.</p>
+                                <a class="ghost-link" href="backend.html#service-layer">Review domain logic</a>
+                            </article>
+                            <article class="card">
+                                <h3>Deferred activity logging</h3>
+                                <p>Every staff action is captured in a request-scoped payload and written after the response is flushed, so audit overhead never blocks the user-facing request.</p>
+                                <a class="ghost-link" href="backend.html#pattern-deferred-activity">See the pattern</a>
+                            </article>
+                            <article class="card">
+                                <h3>Process Authority approval workflow</h3>
+                                <p>Privileged actions are gated by an explicit permission slot. Junior requests are parked in an Admin Desk inbox for senior approval, all from the same controller path.</p>
+                                <a class="ghost-link" href="backend.html#pattern-process-authority">See the pattern</a>
+                            </article>
+                            <article class="card">
+                                <h3>Immutable preserved billing</h3>
+                                <p>Every generated bill is snapshotted to a dedicated table with a content hash, so the printed document remains trustworthy even if the source data is later edited.</p>
+                                <a class="ghost-link" href="backend.html#pattern-preserved-billing">See the pattern</a>
+                            </article>
+                            <article class="card">
+                                <h3>Multi-format bill generation</h3>
+                                <p>One pipeline produces pre-printed overlays, fully generated documents, thermal receipts, and mobile softcopies from the same grouped billing data.</p>
+                                <a class="ghost-link" href="backend.html#pattern-multi-format-billing">See the pattern</a>
+                            </article>
+                            <article class="card">
+                                <h3>Internal cross-service PDF endpoint</h3>
+                                <p>The Flutter client downloads bills through a shared-secret endpoint that switches tenant connections, then reuses the admin pipeline for the actual render.</p>
+                                <a class="ghost-link" href="backend.html#pattern-internal-pdf-endpoint">See the pattern</a>
+                            </article>
+                            <article class="card">
+                                <h3>Resilient mobile API integration</h3>
+                                <p>JSON requests, multipart uploads, binary PDF fallback, and streaming downloads with progress callbacks.</p>
+                                <a class="ghost-link" href="frontend.html#network-layer">Open frontend page</a>
+                            </article>
+                            <article class="card">
+                                <h3>Monorepo developer experience</h3>
+                                <p>One-command multi-service boot, editor settings for a nested Flutter app, and iOS-focused launch profiles for physical-device debugging.</p>
+                                <a class="ghost-link" href="tooling.html">Review tooling</a>
+                            </article>
+                        </div>
+                    </section>
+
+                    <section class="section">
+                        <div class="section-header">
+                            <div class="eyebrow">Gallery</div>
+                            <h3 class="section-title">Screenshots and diagrams from across the system.</h3>
+                            <!-- <p class="section-copy">Placeholders are kept inside the same public structure so redacted visuals can be dropped in later without changing the layout.</p> -->
+                        </div>
+                        <div class="placeholder-grid">
+                            <div class="placeholder-card">
+                                <h3>Admin dashboard</h3>
+                                <div class="asset-box">
+                                    <a href="images/admin-dashboard.png" target="_blank" rel="noopener noreferrer" title="Click to view full size">
+                                        <img src="images/admin-dashboard.png" alt="Admin operations dashboard showing the internal control surface for staff workflows" style="width: 100%; height: auto; border-radius: var(--radius); border: 1px solid var(--border); transition: opacity 0.2s;" onmouseover="this.style.opacity=0.85" onmouseout="this.style.opacity=1">
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="placeholder-card">
+                                <h3>Board analytics</h3>
+                                <div class="asset-box">
+                                    <a href="images/board-analytics.png" target="_blank" rel="noopener noreferrer" title="Click to view full size">
+                                        <img src="images/board-analytics.png" alt="Board analytics dashboard focused on cross-business visibility and executive reporting" style="width: 100%; height: auto; border-radius: var(--radius); border: 1px solid var(--border); transition: opacity 0.2s;" onmouseover="this.style.opacity=0.85" onmouseout="this.style.opacity=1">
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="placeholder-card">
+                                <h3>Mobile experience</h3>
+                                <div class="asset-box">
+                                    <a href="images/flutter-app-screens.png" target="_blank" rel="noopener noreferrer" title="Click to view full size">
+                                        <img src="images/flutter-app-screens.png" alt="Flutter mobile home screen and billing flow" style="width: 100%; height: auto; border-radius: var(--radius); border: 1px solid var(--border); transition: opacity 0.2s;" onmouseover="this.style.opacity=0.85" onmouseout="this.style.opacity=1">
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="placeholder-card">
+                                <h3>Architecture diagram</h3>
+                                <div class="asset-box">
+                                    <a href="images/system-architechture.jpeg" target="_blank" rel="noopener noreferrer" title="Click to view full size">
+                                        <img src="images/system-architechture.jpeg" alt="High-level system architecture diagram" style="width: 100%; height: auto; border-radius: var(--radius); border: 1px solid var(--border); transition: opacity 0.2s;" onmouseover="this.style.opacity=0.85" onmouseout="this.style.opacity=1">
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <footer class="page-footer">AWMAS architecture case study. <span id="current-year"></span></footer>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

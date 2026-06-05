@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWMAS — Frontend Architecture</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="frontend">
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>AWMAS Case Study</h1>
+                <div class="subtitle">Laravel + Flutter architecture</div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Overview</div>
+                    <a class="nav-link" data-page="overview" href="index.html">System Overview</a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Architecture</div>
+                    <a class="nav-link" data-page="backend" href="backend.html">Backend</a>
+                    <a class="nav-link" data-page="frontend" href="frontend.html">Frontend</a>
+                    <a class="nav-link" data-page="tooling" href="tooling.html">Tooling</a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                Public technical documentation. Source code, secrets, and tenant data have been sanitized or removed.
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <button id="mobile-menu-btn" class="icon-btn" aria-label="Toggle menu">
+                    <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                </button>
+                <div class="spacer"></div>
+                <button id="theme-toggle" class="icon-btn" aria-label="Toggle theme">
+                    <svg class="sun-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    <svg class="moon-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </button>
+            </header>
+
+            <div class="content-wrapper">
+                <div class="page long-form">
+                    <section class="hero">
+                        <div class="eyebrow">Frontend</div>
+                        <h2>A Flutter client built for real mobile conditions.</h2>
+                        <p class="lead">
+                            The Flutter app is not a thin client. It manages tenant context locally, handles resilient network communication with the backend, and brokers a complete payment-and-receipt flow through a WebView. The patterns below are taken directly from the real codebase.
+                        </p>
+                        <div class="app-store-row">
+                            <a class="store-btn" href="https://apps.apple.com/us/app/psp-hub-track-waste-bills/id6757864312" target="_blank" rel="noopener noreferrer" aria-label="Download on the App Store">
+                                <svg viewBox="0 0 384 512" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
+                                <div class="store-btn-text">
+                                    <span class="store-btn-small">Download on the</span>
+                                    <span class="store-btn-big">App Store</span>
+                                </div>
+                            </a>
+                            <a class="store-btn" href="https://play.google.com/store/apps/details?id=com.ashraafitworld.psphub" target="_blank" rel="noopener noreferrer" aria-label="Get it on Google Play">
+                                <svg viewBox="0 0 512 512" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.1 225L401.2 184l-69.7 69.7 69.7 69.7 71.9-41.1c20.7-16.4 20.7-50.4 0-66.8l.1.1zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z"/></svg>
+                                <div class="store-btn-text">
+                                    <span class="store-btn-small">GET IT ON</span>
+                                    <span class="store-btn-big">Google Play</span>
+                                </div>
+                            </a>
+                        </div>
+                    </section>
+
+                    <h2 id="architecture-shape">Architecture shape</h2>
+                    <p>
+                        The mobile codebase is organized around three responsibilities that the rest of the app depends on: a single bootstrap path, a Riverpod-managed state graph, and a unified API service. Screens consume the state and never speak to the network directly.
+                    </p>
+
+                    <div class="card-grid three">
+                        <article class="card">
+                            <h3>Bootstrap layer</h3>
+                            <p>Firebase initialization, push token acquisition with progressive backoff, and the global navigation key all live in <code>main.dart</code> and <code>app_global.dart</code>.</p>
+                        </article>
+                        <article class="card">
+                            <h3>State layer</h3>
+                            <p>Riverpod providers hold the active connection, contact, client, bills, payments, account statements, broadcasts, and FCM token — typed, observable, and rebuild-scoped.</p>
+                        </article>
+                        <article class="card">
+                            <h3>Network layer</h3>
+                            <p>A single <code>AppApi</code> base class owns headers and request shaping. A <code>StateProvider</code> holds the active <code>AppApiService</code> so the connection key can be swapped at runtime.</p>
+                        </article>
+                    </div>
+
+                    <h2 id="core-patterns">Core engineering patterns</h2>
+                    <p>
+                        These are the patterns that make the mobile app behave like a production system instead of a demo. The samples below are sanitized — secrets, deployment URLs, and the real bundle identifier have been removed — but the logic is unchanged.
+                    </p>
+
+                    <div class="pattern-index">
+                        <div class="pattern-index-item"><span class="pi-num">01</span><a href="#pattern-bootstrap">Resilient app bootstrap with FCM retry</a></div>
+                        <div class="pattern-index-item"><span class="pi-num">02</span><a href="#pattern-platform-fcm">Platform-aware FCM token retrieval</a></div>
+                        <div class="pattern-index-item"><span class="pi-num">03</span><a href="#pattern-riverpod">Riverpod state graph and provider composition</a></div>
+                        <div class="pattern-index-item"><span class="pi-num">04</span><a href="#pattern-tenant-header">Runtime tenant context through shared headers</a></div>
+                        <div class="pattern-index-item"><span class="pi-num">05</span><a href="#pattern-network">Unified request and upload handling</a></div>
+                        <div class="pattern-index-item"><span class="pi-num">06</span><a href="#pattern-binary">Binary PDF download with progress and fallback</a></div>
+                        <div class="pattern-index-item"><span class="pi-num">07</span><a href="#pattern-payment-flow">WebView payment flow with deep-link reconciliation</a></div>
+                        <div class="pattern-index-item"><span class="pi-num">08</span><a href="#pattern-device-info">Platform-aware device fingerprinting</a></div>
+                        <div class="pattern-index-item"><span class="pi-num">09</span><a href="#pattern-controller">Thin controllers, fat services</a></div>
+                    </div>
+
+                    <h3 id="pattern-bootstrap">Resilient app bootstrap with FCM retry</h3>
+                    <p>
+                        The first thing the app does is make sure Firebase is ready and a push token can be acquired. iOS has a known timing problem: APNs registration can finish <em>after</em> the FCM token request fires, which returns <code>null</code>. The bootstrap path handles that with progressive backoff, and it never blocks the widget tree on success.
+                    </p>
+
+<pre><code class="language-dart">// lib/main.dart (sanitized excerpt)
+
+class _MyAppState extends ConsumerState&lt;MyApp&gt; {
+  bool _fcmInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) =&gt; _initializeFcmToken());
+  }
+
+  Future&lt;void&gt; _initializeFcmToken() async {
+    if (!kIsWeb &amp;&amp; AppGlobal.firebaseApi != null &amp;&amp; !_fcmInitialized) {
+      _fcmInitialized = true;
+
+      // Initial small delay so iOS APNs can register first
+      await Future.delayed(const Duration(seconds: 2));
+      var token = await AppGlobal.firebaseApi!.initNotifications();
+
+      // Progressive backoff for slow iOS APNs registration
+      if (token == null) {
+        for (int attempt = 1; attempt &lt;= 2; attempt++) {
+          await Future.delayed(Duration(seconds: attempt * 3));
+          token = await AppGlobal.firebaseApi!.initNotifications();
+          if (token != null) break;
+        }
+      }
+
+      if (token != null &amp;&amp; mounted) {
+        ref.read(fcmTokenProvider.notifier).state = token;
+        fcmToken = token;
+      }
+    }
+  }
+}</code></pre>
+
+                    <p class="note">
+                        The widget tree is built with <code>ProviderScope</code> regardless of FCM outcome. The push token is treated as a side-effect, not a hard requirement, so a denied permission or a slow APNs registration never blocks the splash screen.
+                    </p>
+
+                    <h3 id="pattern-platform-fcm">Platform-aware FCM token retrieval</h3>
+                    <p>
+                        Android and iOS have entirely different failure modes for push tokens. Android fails when Google Play Services is stale, and the fix is to invalidate and re-request. iOS fails when the APNs token is not yet registered, and the fix is to wait and retry. The <code>FirebaseApi</code> knows both.
+                    </p>
+
+<pre><code class="language-dart">// lib/APIs/firebase_api.dart (sanitized excerpt)
+
+Future&lt;String?&gt; _getTokenForPlatform() async {
+  if (Platform.isIOS) return _getTokenForIOS();
+  if (Platform.isAndroid) return _getTokenForAndroid();
+  return _firebaseMessaging.getToken();
+}
+
+Future&lt;String?&gt; _getTokenForIOS() async {
+  // Wait for the APNs token before requesting the FCM token
+  final apnsToken = await _firebaseMessaging.getAPNSToken();
+  if (apnsToken == null) {
+    await Future.delayed(const Duration(seconds: 2));
+  }
+  var fcmToken = await _firebaseMessaging.getToken();
+  if (fcmToken != null) return fcmToken;
+
+  // iOS-specific retry with longer APNs registration delay
+  await Future.delayed(const Duration(seconds: 3));
+  return _firebaseMessaging.getToken();
+}
+
+Future&lt;String?&gt; _getTokenForAndroid() async {
+  var fcmToken = await _firebaseMessaging.getToken();
+  if (fcmToken != null) return fcmToken;
+
+  // Android fix: invalidate and recreate, in case Play Services is stale
+  try {
+    await _firebaseMessaging.deleteToken();
+    await Future.delayed(const Duration(seconds: 1));
+    return await _firebaseMessaging.getToken();
+  } catch (_) {
+    return null;
+  }
+}</code></pre>
+
+                    <p class="note">
+                        The <code>_getTokenForPlatform()</code> dispatcher means the rest of the codebase never has to ask "what platform am I on" — it just calls <code>initNotifications()</code> and gets the right behavior automatically.
+                    </p>
+
+                    <h3 id="pattern-riverpod">Riverpod state graph and provider composition</h3>
+                    <p>
+                        Every long-lived piece of state in the app is a Riverpod provider. The active connection, the signed-in contact, the list of bills, the FCM token, the list of saved cards — all of them are observable, testable, and rebuild-scoped. The widget tree reads them with <code>ref.watch</code>, and mutates them with <code>ref.read(...notifier).state = ...</code>.
+                    </p>
+
+<pre><code class="language-dart">// lib/APIs/firebase_api.dart + lib/APIs/app_api_service.dart (sanitized excerpt)
+
+// The FCM token is just a string held in a provider
+final fcmTokenProvider = StateProvider&lt;String?&gt;((ref) =&gt; null);
+
+// The active API service is a StateProvider so the connection can be
+// swapped at runtime without losing listeners
+final appApiServiceProvider = StateProvider&lt;AppApiService&gt;(
+  (ref) =&gt; AppApiService(),
+);
+
+// Higher-level providers track the user identity
+final clientProvider  = StateProvider&lt;Client&gt;((ref) =&gt; throw UnimplementedError());
+final contactProvider = StateProvider&lt;Contact&gt;((ref) =&gt; throw UnimplementedError());
+final connectionProvider = StateProvider&lt;Connection?&gt;((ref) =&gt; null);
+
+// Collection providers are notifiers that know how to merge
+// initial loads with refresh loads ("replace" vs "append")
+final billsProvider = BillsNotifier();
+final paymentsProvider = PaymentsNotifier();</code></pre>
+
+                    <p class="note">
+                        The collection providers implement a <code>populateFromResponse(json, mode)</code> method that knows how to handle both the initial load and a pull-to-refresh on a screen. Screens never have to ask the question "is this the first load or a refresh?".
+                    </p>
+
+                    <h3 id="pattern-tenant-header">Runtime tenant context through shared headers</h3>
+                    <p>
+                        The Flutter app serves eleven different businesses, and the user can switch between them at any time. The <code>AppApi</code> base class owns the active <code>Connection</code> and stamps it into every outgoing request, so individual calls never have to remember to attach the tenant key.
+                    </p>
+
+<pre><code class="language-dart">// lib/APIs/app_api_service.dart (sanitized excerpt)
+
+class AppApiService extends AppApi {
+  // Set the active connection on the base class — from this point on,
+  // every request through this service carries the tenant key.
+  void setHeadersConnection(String connectionKey) {
+    // The base AppApi exposes a mutable headers map; the connection key
+    // is stamped into a custom header read by the backend router
+    headers['X-Tenant-Connection'] = connectionKey;
+  }
+}</code></pre>
+
+<pre><code class="language-dart">// lib/controllers/app_controller.dart (sanitized excerpt)
+
+static Future&lt;Map&lt;String, dynamic&gt;&gt; signIn(
+  WidgetRef ref,
+  String phone,
+  Connection connection,
+) async {
+  final appApiService = ref.read(appApiServiceProvider);
+  final fcmToken      = ref.read(fcmTokenProvider);
+  final deviceData    = await getDeviceInfo();
+
+  // Tenant context is swapped BEFORE the request, then stamped into headers
+  appApiService.setHeadersConnection(connection.key);
+
+  final response = await appApiService.signIn({
+    'phone':      phone,
+    'fcm_token':  fcmToken,
+    'device_info': deviceData,
+    'connection': connection.key,
+  });
+
+  if (response['status'] == 'success') {
+    // Persist the device registration so the next launch is pre-authenticated
+    await AppApiService.registerClientOnDevice(response['data']['contact']['phone'], connection);
+    return {'status': true, 'comment': response['comment']};
+  }
+  return {'status': false, 'comment': response['comment']};
+}</code></pre>
+
+                    <p class="note">
+                        The device's active tenant is also written to <code>SharedPreferences</code> on sign-in, and read back on cold start, so the app re-opens on the right business even after being killed.
+                    </p>
+
+                    <h3 id="pattern-network">Unified request and upload handling</h3>
+                    <p>
+                        Every screen-level API call goes through a single <code>handleRequest</code> method on <code>AppApi</code>. The method pre-checks connectivity, branches between a multipart upload and a JSON POST, and translates the response into a uniform shape that the rest of the codebase can rely on.
+                    </p>
+
+<pre><code class="language-dart">// lib/APIs/app_api.dart (sanitized excerpt)
+
+Future&lt;Map&lt;String, dynamic&gt;&gt; handleRequest({
+  required String url,
+  required Map&lt;String, dynamic&gt; body,
+  File? file,
+  String? fileField,
+}) async {
+  // 1. Pre-flight connectivity check
+  final connectivity = await (Connectivity().checkConnectivity());
+  if (connectivity == ConnectivityResult.none) {
+    return {
+      'status':  'failed',
+      'comment': 'No internet connection detected on this device',
+      'data':    &lt;String, dynamic&gt;{},
+    };
+  }
+
+  // 2. Multipart upload path (e.g. payment confirmation receipt photo)
+  if (file != null &amp;&amp; fileField != null) {
+    final request = http.MultipartRequest('POST', Uri.parse(url));
+    headers.forEach((k, v) =&gt; request.headers[k] = v);
+
+    // Stream from a real file (mobile) or raw bytes (web)
+    if (body['is_web'] == true) {
+      request.files.add(http.MultipartFile.fromBytes(
+        fileField, file as Uint8List, filename: 'file.jpg',
+      ));
+    } else {
+      final stream  = http.ByteStream(file.openRead());
+      final length  = await file.length();
+      request.files.add(http.MultipartFile(
+        fileField, stream, length, filename: file.path.split('/').last,
+      ));
+    }
+
+    final streamed = await request.send();
+    final response = await http.Response.fromStream(streamed);
+    return _parseResponse(response);
+  }
+
+  // 3. Standard JSON path
+  final response = await http.post(
+    Uri.parse(url),
+    headers: headers,
+    body: jsonEncode(body),
+  );
+  return _parseResponse(response);
+}</code></pre>
+
+                    <p class="note">
+                        The <code>_parseResponse()</code> helper centralizes the success/failure translation, so callers always get <code>{status, comment, data}</code> back — no matter which backend version produced it.
+                    </p>
+
+                    <h3 id="pattern-binary">Binary PDF download with progress and fallback</h3>
+                    <p>
+                        Account statements and bills are downloaded as PDFs. The backend may stream the raw binary or return a JSON envelope with a base64 payload (the latter is the older deployment). The downloader is written to handle both transparently, with progress callbacks so the UI can show a real download bar.
+                    </p>
+
+<pre><code class="language-dart">// lib/APIs/app_api.dart (sanitized excerpt)
+
+Future&lt;Map&lt;String, dynamic&gt;&gt; downloadBillPdf(
+  String billId, {
+  void Function(int received, int? total)? onProgress,
+}) async {
+  final request = http.Request(
+    'POST',
+    Uri.parse('$apiBaseUrl/client/download_bill_document'),
+  );
+  request.headers.addAll({...headers, 'Accept': 'application/pdf,application/json'});
+  request.body = jsonEncode({'bill_id': billId});
+
+  final client   = http.Client();
+  final streamed = await client.send(request);
+  final ct       = streamed.headers['content-type'] ?? '';
+
+  // Path 1: server streams raw PDF bytes — preferred
+  if (streamed.statusCode == 200 &amp;&amp; ct.contains('application/pdf')) {
+    final total   = streamed.contentLength;
+    int received = 0;
+    final chunks  = &lt;int&gt;[];
+
+    await for (final chunk in streamed.stream) {
+      chunks.addAll(chunk);
+      received += chunk.length;
+      onProgress?.call(received, total);
+    }
+
+    return {
+      'status':   'success',
+      'mode':     'raw',
+      'filename': _extractFilename(streamed.headers['content-disposition']),
+      'bytes':    Uint8List.fromList(chunks),
+    };
+  }
+
+  // Path 2: JSON fallback (base64 PDF or error envelope)
+  final bodyString = await streamed.stream.bytesToString();
+  return jsonDecode(bodyString) as Map&lt;String, dynamic&gt;;
+}</code></pre>
+
+                    <p class="note">
+                        The <code>Content-Disposition</code> header is parsed for the suggested filename, so iOS and Android can both offer a meaningful default when the user saves or shares the downloaded file.
+                    </p>
+
+                    <h3 id="pattern-payment-flow">WebView payment flow with deep-link reconciliation</h3>
+                    <p>
+                        Card payments are processed inside a hosted checkout page in a WebView. The Flutter side does not handle card details at all — it just opens the checkout URL, listens for the success callback URL, refreshes the user state, and navigates home. The user is never stuck on a payment screen.
+                    </p>
+
+<pre><code class="language-dart">// lib/screens/payment/pay_final_screen.dart (sanitized excerpt)
+
+final controller = WebViewController()
+  ..setJavaScriptMode(JavaScriptMode.unrestricted)
+  ..setNavigationDelegate(
+    NavigationDelegate(
+      onProgress: (int progress) {
+        dev.log('progress: $progress');
+      },
+      onNavigationRequest: (NavigationRequest request) async {
+        // The hosted checkout redirects here on success
+        if (request.url.contains('/payment_successful')) {
+          await AppController.refreshData(ref, context);
+          Navigator.pushNamedAndRemoveUntil(
+            context, HomeScreen.routeName, (route) =&gt; false,
+          );
+        } else {
+          _showErrorDialog('Payment verification failed');
+          Navigator.pop(context);
+        }
+        return NavigationDecision.navigate;
+      },
+    ),
+  )
+  ..loadRequest(Uri.parse(authorizedPaymentUrl));</code></pre>
+
+                    <p class="note">
+                        <code>AppController.refreshData()</code> re-pulls the entire home state (bills, payments, account statements, broadcasts) so the user sees the new balance the moment the WebView resolves the success callback — no manual refresh required.
+                    </p>
+
+                    <h3 id="pattern-device-info">Platform-aware device fingerprinting</h3>
+                    <p>
+                        Every sign-in includes a structured device fingerprint. The shape of the fingerprint is different on Android, iOS, and Web, so the controller dispatches to a per-platform reader. The backend uses this for fraud signals, device tracking, and account recovery flows.
+                    </p>
+
+<pre><code class="language-dart">// lib/controllers/app_controller.dart (sanitized excerpt)
+
+static Future&lt;Map&lt;String, dynamic&gt;&gt; getDeviceInfo() async {
+  final deviceInfo = DeviceInfoPlugin();
+  try {
+    if (kIsWeb) {
+      return _readWebBrowserInfo(await deviceInfo.webBrowserInfo);
+    }
+    if (Platform.isAndroid) {
+      return _readAndroidBuildData(await deviceInfo.androidInfo);
+    }
+    if (Platform.isIOS) {
+      return _readIosDeviceInfo(await deviceInfo.iosInfo);
+    }
+  } catch (_) {
+    return {"Error": "Failed to get device info"};
+  }
+  return {};
+}
+
+static Map&lt;String, dynamic&gt; _readIosDeviceInfo(IosDeviceInfo data) =&gt; {
+  'name':               data.name,
+  'systemName':         data.systemName,
+  'systemVersion':      data.systemVersion,
+  'model':              data.model,
+  'isPhysicalDevice':   data.isPhysicalDevice,
+  'identifierForVendor': data.identifierForVendor,
+  // ...
+};</code></pre>
+
+                    <p class="note">
+                        The fingerprint travels with the FCM token and the tenant key as a single sign-in envelope, so the backend has all the context it needs to authorize the session in one round trip.
+                    </p>
+
+                    <h3 id="pattern-controller">Thin controllers, fat services</h3>
+                    <p>
+                        <code>AppController</code> is a static class of method-level coordinators, not a stateful object. Each method reads the providers it needs, calls the API service, then writes the result back to the providers. Screens never call the network layer directly — they call a controller method and let the state graph react.
+                    </p>
+
+<pre><code class="language-dart">// lib/controllers/app_controller.dart (sanitized excerpt)
+
+static Future&lt;Map&lt;String, dynamic&gt;&gt; initializeHome({
+  required WidgetRef ref,
+  String contactIdSource = 'contact',
+}) async {
+  // Read everything we need from the state graph
+  final appApiService = ref.read(appApiServiceProvider);
+  final client        = ref.read(clientProvider);
+  final contact       = ref.read(contactProvider);
+  final connection    = ref.read(connectionProvider);
+  final fcmToken      = ref.read(fcmTokenProvider);
+  final deviceData    = await getDeviceInfo();
+
+  // One network call
+  final response = await appApiService.initializeHomeData({
+    'contact_id':  contactIdSource == 'client' ? client.contactId : contact.id,
+    'phone':       contact.phone,
+    'property_id': client.propertyId,
+    'connection':  connection?.key,
+    'device_info': deviceData,
+    'fcm_token':   fcmToken ?? '',
+  });
+
+  if (response['status'] != 'success') {
+    return {'status': false, 'comment': response['comment']};
+  }
+
+  // Write the result back into the state graph in a single sweep
+  final d = response['data'];
+  ref.read(clientProvider.notifier).state           = Client.fromJson(d['client']);
+  ref.read(contactProvider.notifier).state          = Contact.fromJson(d['contact']);
+  if (d['bills'].isNotEmpty)             ref.read(billsProvider.notifier).populateFromResponse(d['bills'], 'replace');
+  if (d['payments'].isNotEmpty)          ref.read(paymentsProvider.notifier).populateFromResponse(d['payments'], 'replace');
+  if (d['account_statements'].isNotEmpty) ref.read(accountstatementsProvider.notifier).populateFromResponse(d['account_statements'], 'replace');
+  if (d['message_broadcasts'].isNotEmpty) ref.read(messageBroadcastsProvider.notifier).populateFromResponse(d['message_broadcasts'], 'replace');
+
+  return {'status': true, 'comment': response['comment']};
+}</code></pre>
+
+                    <p class="note">
+                        Screens that watch these providers rebuild automatically the moment the controller finishes writing. There is no manual <code>setState()</code> in the home flow — the state graph does the work.
+                    </p>
+
+                    <h2 id="architectural-outcomes">Architectural outcomes</h2>
+                    <p>
+                        These patterns combine to create a mobile client that is responsive, recoverable, and trustworthy in real production conditions.
+                    </p>
+
+                    <div class="card-grid two">
+                        <article class="card">
+                            <h3>Resilient first-launch experience</h3>
+                            <p>iOS APNs registration delays and Android Play Services stalls are handled inside the FCM layer, so a slow push registration never blocks the splash screen or the sign-in flow.</p>
+                        </article>
+                        <article class="card">
+                            <h3>Single source of truth in the state graph</h3>
+                            <p>Every screen reads from the same Riverpod providers. Refreshing the home state in one place propagates to every screen that watches those providers — no duplicated fetches, no stale data.</p>
+                        </article>
+                        <article class="card">
+                            <h3>Forward-compatible network layer</h3>
+                            <p>The same download method handles streamed raw PDFs and JSON base64 envelopes. Older deployments keep working, newer deployments stream faster — the client never has to know which backend it is talking to.</p>
+                        </article>
+                        <article class="card">
+                            <h3>Tenant context without boilerplate</h3>
+                            <p>The active business is stamped into request headers once, at the moment the connection is selected. Individual calls never have to remember to attach the tenant key, and switching tenants is a single header rewrite.</p>
+                        </article>
+                    </div>
+
+                    <footer class="page-footer">AWMAS architecture case study. <span id="current-year"></span></footer>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dart.min.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
